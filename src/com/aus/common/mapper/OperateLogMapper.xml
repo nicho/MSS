@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.aus.common.dao.OperateLogDao">
+	
+	<resultMap id="OperateLogMap" type="com.aus.common.model.OperateLogDto">
+		<result column="OPERATE_ID" property="operateId" jdbcType="VARCHAR" /> 
+		<result column="OPERATE_USER_ID" property="operateUserId" jdbcType="VARCHAR" />
+		<result column="OPERATE_MSG" property="operateMsg" jdbcType="VARCHAR" /> 
+		<result column="OPERATE_TYPE" property="operateType" jdbcType="VARCHAR" /> 
+		<result column="BE_OPERATE_OBJ_ID" property="beOperateObjId" jdbcType="VARCHAR" /> 
+		<result column="LOG_TYPE" property="logType" jdbcType="VARCHAR" /> 
+		<result column="CREATION_BY" property="creationBy" jdbcType="VARCHAR" /> 
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_BY" property="lastUpdateBy" jdbcType="VARCHAR" /> 
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />  
+	</resultMap>
+	<resultMap id="OperateLogLineMap" type="com.aus.common.model.OperateLogLineDto">
+		<result column="LINE_ID" property="lineId" jdbcType="VARCHAR" /> 
+		<result column="OPERATE_ID" property="operateId" jdbcType="VARCHAR" /> 
+		<result column="VARIABLE_NAME" property="variableName" jdbcType="VARCHAR" />
+		<result column="ORI_VALUE" property="oriValue" jdbcType="VARCHAR" />
+		<result column="UPDATED_VALUE" property="updatedValue" jdbcType="VARCHAR" />
+		<result column="CREATION_BY" property="creationBy" jdbcType="VARCHAR" /> 
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_BY" property="lastUpdateBy" jdbcType="VARCHAR" /> 
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" /> 
+	</resultMap> 
+  <insert id="addOperateLog" parameterType="com.aus.common.model.OperateLogDto" >
+    <selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="operateId" >
+	SELECT AUPORTAL.OA_OPERATE_LOG_S.NEXTVAL FROM DUAL
+	</selectKey>	
+    insert into  AUPORTAL.OA_OPERATE_LOG (
+    <trim suffixOverrides=",">
+			   OPERATE_ID,OPERATE_USER_ID,OPERATE_MSG,
+		 	   OPERATE_TYPE,
+		 	   BE_OPERATE_OBJ_ID,
+			 	  CREATION_BY,
+			 	  LAST_UPDATE_BY,
+			 	  LAST_UPDATE_DATE,
+		 	      CREATION_DATE,
+		 	      LOG_TYPE	  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			    #{operateId,jdbcType=NUMERIC},#{operateUserId},#{operateMsg},
+			    #{operateType},#{beOperateObjId},
+			 	  #{creationBy},
+			 	  #{lastUpdateBy},
+			 	  SYSDATE,
+		 	   	  SYSDATE,#{logType}
+		   </trim>
+		  )	
+  </insert>
+  
+    <insert id="addLoginLog" parameterType="com.aus.common.model.CuxOaLoginLogDto" >
+    <selectKey resultType="java.lang.String" order="BEFORE" keyProperty="login_id" >
+	SELECT APPS.CUX_OA_LOGIN_LOG_S.NEXTVAL FROM DUAL
+	</selectKey>	
+    insert into  APPS.CUX_OA_LOGIN_LOG (
+    <trim suffixOverrides=",">
+			   LOGIN_ID,USER_ID,IP,
+		 	   LOGIN_DATE,
+		 	   USER_AGENT,
+			 	  URL
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			    #{login_id,jdbcType=NUMERIC},#{user_id,jdbcType=NUMERIC},#{ip},
+			    #{login_date,jdbcType=TIMESTAMP},#{user_agent},
+			    #{url}
+		   </trim>
+		  )	
+  </insert>
+  
+  
+    <insert id="addOperateLogLine" parameterType="com.aus.common.model.OperateLogLineDto" >
+    <selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="lineId" >
+	SELECT AUPORTAL.OA_OPERATE_LOG_LINE_S.NEXTVAL FROM DUAL
+	</selectKey>	
+    insert into  AUPORTAL.OA_OPERATE_LOG_LINE (
+    <trim suffixOverrides=",">
+			   LINE_ID,OPERATE_ID,VARIABLE_NAME,
+		 	   ORI_VALUE,
+		 	   UPDATED_VALUE,
+			 	  CREATION_BY,
+			 	  LAST_UPDATE_BY,
+			 	  LAST_UPDATE_DATE,
+		 	      CREATION_DATE,
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			    #{lineId,jdbcType=NUMERIC},#{operateId},#{variableName},
+			    #{oriValue},#{updatedValue},
+			 	  #{creationBy},
+			 	  #{lastUpdateBy},
+			 	  SYSDATE,
+		 	   	  SYSDATE
+		   </trim>
+		  )	
+  </insert>		
+</mapper>

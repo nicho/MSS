@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.aus.common.dao.OrgValueDao">
+	
+	<resultMap id="OrgValueMap" type="com.aus.common.model.OrgDto">
+		<result column="OU_ORGANIZATION_ID" property="orgId" jdbcType="VARCHAR" /> 
+		<result column="OU_ORGANIZATION_NAME_ABBREV" property="orgName" jdbcType="VARCHAR" /> 
+	</resultMap>
+	 
+	
+	<select id="getOrgList" resultMap="OrgValueMap"  >
+			SELECT * FROM BASE_ORGANIZATION_OU_V OU			
+	</select>
+	 <select id="getAccessOrgListByOrgId" resultMap="OrgValueMap"  parameterType="java.lang.String">
+			 SELECT *
+  FROM BASE_ORGANIZATION_OU_V OU
+ WHERE OU.OU_ORGANIZATION_ID IN
+       (SELECT CAB.USER_ID ORG_ID_CHILD
+          FROM CUX.CUX_CDM_ACCESS_BASEDATA CAB
+         WHERE CAB.ACCESS_TYPE = '9'
+           AND CAB.CUST_ACCOUNT_ID IN (2, 3)
+           AND CAB.ORG_ID = #{orgId})		
+	</select>
+	  
+    <select id="getOrgById" resultMap="OrgValueMap" parameterType="java.lang.Long" >
+			SELECT * FROM BASE_ORGANIZATION_OU_V OU		WHERE OU.OU_ORGANIZATION_ID=#{id}	
+	</select>
+	 <select id="getOrgByOrglevel" resultMap="OrgValueMap" parameterType="java.lang.String" >
+			SELECT 
+                 CAB.USER_ID                  OU_ORGANIZATION_ID,
+                 CAB.SECONDARY_INVENTORY_NAME OU_ORGANIZATION_NAME_ABBREV
+            FROM CUX.CUX_CDM_ACCESS_BASEDATA CAB
+           WHERE CAB.ACCESS_TYPE = '9'
+             AND CAB.CUST_ACCOUNT_ID IN (2,3)
+             and CAB.ORG_ID =#{orgId}	
+	</select>
+	<select id="checkIsProvinceByPositionId" parameterType="java.lang.String"  resultType="java.lang.String">
+	SELECT A2.IS_PROVINCET
+  FROM AUPORTAL.BASE_HR_POSITION_V A1,
+       (SELECT FV.FLEX_VALUE,
+               FV.ATTRIBUTE2 IS_PROVINCET
+          FROM APPLSYS.FND_FLEX_VALUE_SETS FVS,
+               APPS.FND_FLEX_VALUES_VL     FV
+         WHERE FVS.FLEX_VALUE_SET_ID = FV.FLEX_VALUE_SET_ID
+           AND FVS.FLEX_VALUE_SET_NAME LIKE 'CUX_PROVINCE') A2
+ WHERE A1.PROVINCE = A2.FLEX_VALUE
+       AND A1.POSITION_ID =  #{positionId,jdbcType=VARCHAR}
+   </select>
+	
+</mapper>

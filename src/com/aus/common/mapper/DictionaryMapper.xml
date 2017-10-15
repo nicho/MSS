@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.aus.common.dao.IDictionaryDao">
+
+	<resultMap id="DictionaryMap" type="com.aus.common.model.DictionaryDto">
+		<result column="CODE" property="code" jdbcType="VARCHAR" />
+		<result column="NAME" property="name" jdbcType="VARCHAR" />
+	</resultMap>
+
+	<resultMap id="BudgetAbTypeMap" type="com.aus.common.model.BudgetAbTypeDto">
+		<result column="AMOUNT_TYPE" property="amountType" jdbcType="VARCHAR" />
+		<result column="AMOUNT_NAME" property="amountName" jdbcType="VARCHAR" />
+		<result column="BOUNDARY_TYPE" property="boundaryType" jdbcType="VARCHAR" />
+		<result column="BOUNDARY_NAME" property="boundaryName" jdbcType="VARCHAR" />
+		<result column="AMOUNT_DESCRIPTION" property="amountDescription" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="OrgChannelTypeMap" type="com.aus.common.model.OrgChannelTypeDto">
+		<result column="ORG_ID" property="orgId" jdbcType="VARCHAR" />
+		<result column="ORG_NAME" property="orgName" jdbcType="VARCHAR" />
+		<result column="CHANNEL_TYPE" property="channelType" jdbcType="VARCHAR" />
+		<result column="CHANNEL_NAME" property="channelName" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="BudgetCityMap" type="com.aus.common.model.BudgetCityDto">
+		<result column="PROVINCE" property="province" jdbcType="VARCHAR" />
+		<result column="CITY" property="city" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="DepartmemtOrganizationMap" type="com.aus.common.model.DepartmemtOrganizationDto">
+		<result column="HR_ORGANIZATION_ID" property="hrOrganizationId" jdbcType="VARCHAR" />
+		<result column="HR_ORGANIZATION_NAME" property="hrOrganizationName" jdbcType="VARCHAR" />
+		<result column="HR_ORGANIZATION_NAME_ABBREV" property="hrOrganizationNameAbbrev" jdbcType="VARCHAR" />
+		<result column="OU_ORGANIZATION_ID" property="ouOrganizationId" jdbcType="VARCHAR" />
+		<result column="PARENT_HR_ORGANIZATION_ID" property="parentHrOrganizationId" jdbcType="VARCHAR" />
+		
+	</resultMap>
+	
+	<select id="getDepartmemtOrganization" resultMap="DepartmemtOrganizationMap" parameterType="java.util.Map">
+		SELECT v.HR_ORGANIZATION_ID          HR_ORGANIZATION_ID,
+		       v.HR_ORGANIZATION_NAME        HR_ORGANIZATION_NAME,
+		       v.HR_ORGANIZATION_NAME_ABBREV HR_ORGANIZATION_NAME_ABBREV,
+		       v.OU_ORGANIZATION_ID          OU_ORGANIZATION_ID,
+		       v.PARENT_HR_ORGANIZATION_ID   PARENT_HR_ORGANIZATION_ID 
+		  FROM auportal.base_organization_hr_v v
+
+		<if test="orgId != null and ''!= orgId" >
+		 where v.OU_ORGANIZATION_ID IN 
+		 
+		 (
+			   SELECT CAB.USER_ID 
+		        FROM CUX.CUX_CDM_ACCESS_BASEDATA CAB
+		       WHERE CAB.ACCESS_TYPE = '9'
+		         AND CAB.CUST_ACCOUNT_ID IN (2
+		        <if test="'Y'.toString()==levelTypeUp">
+		 			,1
+		 		</if>  
+		 		<choose>
+		 			<when test="levelTypeDown != null and ''!= levelTypeDown">
+					 	    <if test="'Y'.toString()==levelTypeDown">
+					 			,3
+					 		</if>
+		 			</when>
+		 			<otherwise>
+		 				,3
+		 			</otherwise>
+		 		</choose>
+		 		
+		         )
+		         and CAB.ORG_ID =  #{orgId}
+		 )
+		 	
+		 	
+		</if>
+		
+		
+		
+		order by v.HR_ORGANIZATION_NAME
+	</select>
+	
+	<select id="getCityByProvince" resultType="java.lang.String" parameterType="java.lang.String">
+		SELECT FV.FLEX_VALUE CITY
+		  FROM APPS.FND_FLEX_VALUE_SETS FVS, APPS.FND_FLEX_VALUES_VL FV
+		 WHERE FVS.FLEX_VALUE_SET_ID = FV.FLEX_VALUE_SET_ID
+		   AND FVS.FLEX_VALUE_SET_NAME = 'CUX_STATE'
+		   AND FV.ENABLED_FLAG = 'Y'
+		   <if test="province != null and ''!= province">
+		    	AND FV.PARENT_FLEX_VALUE_LOW = #{province}
+		   </if>
+	</select>
+	
+	<select id="getCity" resultMap="BudgetCityMap" parameterType="java.util.Map">
+		SELECT FV.PARENT_FLEX_VALUE_LOW PROVINCE, FV.FLEX_VALUE CITY
+		  FROM APPS.FND_FLEX_VALUE_SETS FVS, APPS.FND_FLEX_VALUES_VL FV
+		 WHERE FVS.FLEX_VALUE_SET_ID = FV.FLEX_VALUE_SET_ID
+		   AND FVS.FLEX_VALUE_SET_NAME = 'CUX_STATE'
+		   AND FV.ENABLED_FLAG = 'Y'
+		   <if test="province != null and ''!= province">
+		    	AND FV.PARENT_FLEX_VALUE_LOW = #{province}
+		   </if>
+	</select>
+	
+	<select id="getOrgChannelType" resultMap="OrgChannelTypeMap" parameterType="java.util.Map">
+		SELECT OU.ORG_ID, OU.ORG_NAME, CHAN.FLEX_VALUE CHANNEL_TYPE, CHAN.FLEX_VALUES_DESC CHANNEL_NAME
+		  FROM (SELECT CAB.USER_ID                  ORG_ID,
+		               CAB.SECONDARY_INVENTORY_NAME ORG_NAME,
+		               CAB.CUST_ACCOUNT_ID          LEVEL_TYPE
+		          FROM APPS.CUX_CDM_ACCESS_BASEDATA CAB
+		         WHERE CAB.ACCESS_TYPE = '9'
+		           AND CAB.CUST_ACCOUNT_ID IN (2, 3)
+		           AND CAB.ORG_ID = #{orgId}
+		           ) OU,
+		       (SELECT FV.FLEX_VALUE, FV.DESCRIPTION FLEX_VALUES_DESC
+		          FROM APPS.FND_FLEX_VALUE_SETS FVS, APPS.FND_FLEX_VALUES_VL FV
+		         WHERE FVS.FLEX_VALUE_SET_ID = FV.FLEX_VALUE_SET_ID
+		           AND FVS.FLEX_VALUE_SET_NAME = 'CUX_CHANNEL_TYPE'
+		           <![CDATA[AND FV.FLEX_VALUE<>'90']]>) CHAN
+		   <if test="conditionSql != null and ''!= conditionSql">
+		    	WHERE ${conditionSql}
+		   </if>
+	</select>
+	
+	<select id="getChannelType" resultMap="DictionaryMap" parameterType="java.util.Map">
+		SELECT FV.FLEX_VALUE CODE, FV.DESCRIPTION NAME
+		  FROM APPS.FND_FLEX_VALUE_SETS FVS, APPS.FND_FLEX_VALUES_VL FV
+		 WHERE FVS.FLEX_VALUE_SET_ID = FV.FLEX_VALUE_SET_ID
+		   AND FVS.FLEX_VALUE_SET_NAME = 'CUX_CHANNEL_TYPE'
+		   <if test="channelType != null and ''!= channelType and '90'!= channelType">
+		    	AND FV.FLEX_VALUE = #{channelType}
+		   </if>
+		   <if test="conditionSql != null and ''!= conditionSql">
+		    	${conditionSql}
+		   </if>
+		   <if test="channelName != null and ''!= channelName">
+		    	AND FV.DESCRIPTION = #{channelName}
+		   </if>
+	</select>
+	
+	<select id="getOrg" resultMap="DictionaryMap" parameterType="java.util.Map">
+		SELECT CAB.USER_ID                  CODE,
+		       CAB.SECONDARY_INVENTORY_NAME NAME
+		  FROM APPS.CUX_CDM_ACCESS_BASEDATA CAB
+		 WHERE CAB.ACCESS_TYPE = '9'
+		   AND CAB.ORG_ID = #{orgId} 
+       	   AND CAB.CUST_ACCOUNT_ID IN (2, 3)
+		   <if test="orgId != null and ''!= orgId">
+		    	AND CAB.USER_ID = #{orgId}
+		   </if>
+		   <if test="conditionSql != null and ''!= conditionSql">
+		    	${conditionSql}
+		   </if>
+		   <if test="orgName != null and ''!= orgName">
+		    	AND CAB.SECONDARY_INVENTORY_NAME = #{orgName}
+		   </if>
+	</select>
+	
+	<select id="getOrgNew" resultMap="DictionaryMap" parameterType="java.util.Map">
+		        SELECT CAB.USER_ID                   CODE, /* 当前组织 */
+				       CAB.SECONDARY_INVENTORY_NAME NAME/* 能访问的组织name */
+				  FROM CUX.CUX_CDM_ACCESS_BASEDATA CAB
+				 WHERE CAB.ACCESS_TYPE = '9'
+				   AND CAB.CUST_ACCOUNT_ID IN (2,3)
+		   <if test="orgId != null and ''!= orgId">
+		    	AND CAB.ORG_ID = #{orgId}		    	
+		   </if>
+		   <if test="childOrg != null and ''!= childOrg">
+		    	AND CAB.USER_ID = #{childOrg}		    	
+		   </if>
+		    <if test="orgName != null and ''!= orgName">
+		    	AND CAB.SECONDARY_INVENTORY_NAME = #{orgName}
+		   </if>
+	</select>
+	
+	<select id="getOrgName" resultType="java.lang.String" parameterType="java.lang.String">
+		        SELECT CAB.SECONDARY_INVENTORY_NAME NAME/* 能访问的组织name */
+				  FROM CUX.CUX_CDM_ACCESS_BASEDATA CAB
+				 WHERE CAB.ACCESS_TYPE = '9'
+				   AND CAB.CUST_ACCOUNT_ID IN (2,3)
+		   <if test="orgId != null and ''!= orgId">
+		    	AND CAB.ORG_ID = #{orgId}
+		    	AND CAB.USER_ID = #{orgId}		    	
+		   </if>
+	</select>
+	
+    <select id="getBudgetABType" resultMap="BudgetAbTypeMap">
+    	SELECT T.AMOUNT_TYPE,
+		       T.AMOUNT_NAME,
+		       T.BOUNDARY_TYPE,
+		       T.BOUNDARY_NAME,
+		       T.AMOUNT_DESCRIPTION
+		  FROM APPS.CUX_BUDGET_AB_TYPE_V T
+    </select>
+    
+	<select id="getExpenseDocType" resultMap="DictionaryMap" >
+		SELECT A.LOOKUP_CODE CODE, A.MEANING NAME
+		  FROM APPS.FND_LOOKUP_VALUES_VL A
+		 WHERE A.LOOKUP_TYPE = 'CUX_EXPENSE_DOC_TYPE'
+	</select>
+	
+	<select id="getNeedEncumbrance" resultMap="DictionaryMap">
+		SELECT A.LOOKUP_CODE CODE, A.MEANING NAME
+		  FROM APPS.FND_LOOKUP_VALUES_VL A
+		 WHERE A.LOOKUP_TYPE = 'XLA_YES_NO'
+	</select>
+	
+	<select id="getGlAccount" resultMap="DictionaryMap">
+		SELECT FV.FLEX_VALUE CODE,
+		       FV.FLEX_VALUE || ' - ' || FV.DESCRIPTION NAME
+		  FROM APPS.FND_FLEX_VALUE_SETS FVS, APPS.FND_FLEX_VALUES_VL FV
+		 WHERE FVS.FLEX_VALUE_SET_ID = FV.FLEX_VALUE_SET_ID
+		   AND FVS.FLEX_VALUE_SET_NAME = 'AUS_ACCOUNT'
+		   AND FV.SUMMARY_FLAG = 'N'
+	  ORDER BY FV.FLEX_VALUE
+	</select>
+	
+	<select id="getBusinessType" resultMap="DictionaryMap">
+		SELECT T.TYPE_CODE CODE, T.TYPE_NAME NAME FROM APPS.CUX_BUSINESS_TYPE_V T
+	</select>
+	
+	<select id="getExpenseAccountStatus" resultMap="DictionaryMap">
+		SELECT STATUS_CODE CODE, STATUS_NAME NAME FROM APPS.CUX_EXPENSE_ACCOUNT_STATUS_V
+	</select>
+	
+	<select id="getAmountType" resultMap="DictionaryMap">
+	  SELECT L.LOOKUP_CODE CODE, L.MEANING, L.DESCRIPTION NAME
+	    FROM APPS.GL_LOOKUPS L
+	   WHERE L.LOOKUP_TYPE(+) = 'PTD_YTD'
+	</select>
+	
+	<select id="getYear" resultMap="DictionaryMap">
+		SELECT DISTINCT PERIOD_YEAR CODE
+		  FROM APPS.GL_PERIOD_STATUSES A
+		 WHERE A.APPLICATION_ID = 101
+		   AND A.LEDGER_ID = 2021
+		   AND A.ADJUSTMENT_PERIOD_FLAG = 'N'
+		   ORDER BY PERIOD_YEAR DESC
+	</select>
+	
+	<select id="getQuarter" resultMap="DictionaryMap">
+		SELECT DISTINCT T.QUARTER_PERIOD CODE
+		  FROM APPS.BC_BUDGET_PERIOD_V T
+		 ORDER BY T.QUARTER_PERIOD DESC
+	</select>
+	
+	<select id="getBoundaryType" resultMap="DictionaryMap">
+		SELECT L.LOOKUP_CODE CODE, L.MEANING, L.DESCRIPTION NAME
+		  FROM APPS.GL_LOOKUPS L
+		 WHERE L.LOOKUP_TYPE(+) = 'BOUNDARY_TYPE'
+	</select>
+	
+	<select id="getDepartment" resultMap="DictionaryMap" parameterType="java.util.Map">
+		SELECT D.DEPARTMENT_CODE CODE, D.DEPARTMENT_DESC NAME
+		  FROM APPS.CUX_DEPARTMENT_V D
+		 WHERE DEPARTMENT_CODE IN (SELECT PO.PROVINCE    
+		   FROM BASE_USER FU, APPS.CUX_PERSON_ORGANIZATION_V PO 
+		  WHERE PO.ORG_ID = #{orgId}
+		   <if test="userId != null and ''!= userId">
+		    	AND FU.USER_ID = #{userId}
+		    </if>
+		    <if test="departmentCode != null and ''!= departmentCode">
+		    	AND PO.PROVINCE = #{departmentCode}
+		    </if>
+		    AND FU.PERSON_ID = PO.PERSON_ID)
+	  ORDER BY NLSSORT(D.DEPARTMENT_DESC,'NLS_SORT = SCHINESE_PINYIN_M')
+	</select>
+	
+	<select id="getEncumbranceStatus" resultMap="DictionaryMap">
+		SELECT ENCUMBRANCE_STATUS CODE,STATUS_NAME NAME FROM APPS.CUX_ENCUMBRANCE_STATUS_V
+	</select>
+	
+	<select id="getReimburseStatus" resultMap="DictionaryMap">
+		SELECT REIMBURSE_STATUS CODE, STATUS_NAME NAME FROM APPS.CUX_REIMBURSE_STATUS_V A
+	</select>
+	
+	<select id="getPeriodModify" resultMap="DictionaryMap" >
+		SELECT TO_CHAR(A.START_DATE, 'YYYY-MM') CODE,EFFECTIVE_PERIOD_NUM NAME
+	      FROM apps.GL_PERIOD_STATUSES A
+	     WHERE A.APPLICATION_ID = 101
+	       AND A.LEDGER_ID = 2021
+	       AND A.ADJUSTMENT_PERIOD_FLAG = 'N'
+	       AND A.START_DATE > SYSDATE - 390
+	       AND A.START_DATE &lt;= SYSDATE
+	    ORDER BY EFFECTIVE_PERIOD_NUM DESC
+   </select>
+   
+	<select id="getPeriod" resultMap="DictionaryMap" >
+		SELECT TO_CHAR(A.START_DATE, 'YYYY-MM') CODE, EFFECTIVE_PERIOD_NUM NAME
+		  FROM APPS.GL_PERIOD_STATUSES A
+		 WHERE A.APPLICATION_ID = 101
+		   AND A.LEDGER_ID = 2021
+		   AND A.ADJUSTMENT_PERIOD_FLAG = 'N'
+	  ORDER BY EFFECTIVE_PERIOD_NUM DESC
+	</select>
+	
+	<select id="getExpenseType" resultMap="DictionaryMap" >
+		SELECT EXPENSE_TYPE CODE, EXPENSE_NAME NAME FROM APPS.CUX_EXPENSE_TYPE_V
+	</select>
+	
+	<select id="getBookType" resultMap="DictionaryMap" >
+		   SELECT A.CODE CODE, A.CODE_DESCRIPTION NAME
+           FROM  BASE.BASE_DICT_T A 
+           WHERE A.USEAGE_CODE='BOOK_TYPE' AND A.VALID_FLAG='Y'
+	</select>
+	
+	<select id="getBookBindingType" resultMap="DictionaryMap" >
+		   SELECT A.CODE CODE, A.CODE_DESCRIPTION NAME
+           FROM  BASE.BASE_DICT_T A 
+           WHERE A.USEAGE_CODE='BINDING_TYPE' AND A.VALID_FLAG='Y'
+	</select>
+	
+	<select id="getDictionaryType" resultMap="DictionaryMap" parameterType="java.lang.String">
+		   SELECT A.CODE CODE, A.CODE_DESCRIPTION NAME
+           FROM  BASE.BASE_DICT_T A 
+           WHERE A.USEAGE_CODE=#{typename} AND A.VALID_FLAG='Y'
+	</select>	
+	
+		
+	<select id="getSeriesNameByOrgId" resultMap="DictionaryMap" parameterType="java.lang.String">
+		 select a.code, a.code_description as name
+          from base.BASE_DICT_T a
+          where a.valid_flag = 'Y'
+          and a.org_id = #{orgId,jdbcType=VARCHAR}
+          and a.useage_code = 'PRD_SERIES_NAME'
+          order by a.id asc
+	</select>
+	
+	<select id="getHrLectorType" resultMap="DictionaryMap" >
+		   SELECT A.CODE, A.CODE_DESCRIPTION as name FROM 
+		   	BASE.BASE_DICT_T A 
+		   WHERE A.USEAGE_CODE = 'TEACHER_TYPE' AND A.VALID_FLAG = 'Y'
+	</select>
+	
+</mapper>

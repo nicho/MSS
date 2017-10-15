@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.aus.authority.dao.IRoleDao">
+
+	<resultMap id="RoleMap" type="com.aus.authority.model.RoleDto">
+		<id column="ROLE_ID" property="roleId" jdbcType="VARCHAR" />
+		<result column="ROLE_NAME" property="roleName" jdbcType="VARCHAR" />
+		<result column="ROLE_CODE" property="roleCode" jdbcType="VARCHAR" />
+		<result column="ROLE_DESC" property="roleDesc" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="RoleTlMap" type="com.aus.authority.model.RoleTlDto">
+		<result column="ROLE_ID" property="roleId" jdbcType="VARCHAR" />
+		<result column="ROLE_NAME" property="roleName" jdbcType="VARCHAR" />
+		<result column="ROLE_DESC" property="roleDesc" jdbcType="VARCHAR" />
+		<result column="LANGUAGE" property="language" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="RoleFuncMap" type="com.aus.authority.model.RoleFuncDto">
+		<result column="ROLE_ID" property="roleId" jdbcType="VARCHAR" />
+		<result column="MENU_NODE_ID" property="menuNodeId" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="RoleResourceMap" type="com.aus.authority.model.RoleResourceDto">
+		<result column="ROLE_ID" property="roleId" jdbcType="VARCHAR" />
+		<result column="RESOURCE_ID" property="resourceId" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<select id="getAllRole"  resultMap="RoleMap" parameterType="com.aus.authority.model.RoleDto">
+		SELECT BASEROLE.ROLE_ID,		       
+		       BASEROLE.ROLE_NAME,
+		       BASEROLE.ROLE_CODE,
+		       BASEROLE.ROLE_DESC,       
+		       BASEROLE.LAST_UPDATE_LOGIN,
+		       BASEROLE.LAST_UPDATED_BY,
+		       TO_CHAR(BASEROLE.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASEROLE.CREATED_BY,
+		       TO_CHAR(BASEROLE.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM AUPORTAL.BASE_ROLE_VL BASEROLE
+	     WHERE 1=1
+	     <if test="roleName != null and ''!= roleName">
+		 	  AND BASEROLE.ROLE_NAME LIKE '%'|| #{roleName} ||'%'
+	 	 </if>
+	 	 <if test="roleCode != null and ''!= roleCode">
+		 	  AND BASEROLE.ROLE_CODE LIKE '%'|| #{roleCode} ||'%'
+	 	 </if>
+	 	 ORDER BY ROLE_ID ASC
+	</select>
+	
+	<select id="getRoleCountByRole"  resultMap="RoleMap" parameterType="com.aus.authority.model.RoleDto">
+		SELECT BASEROLE.ROLE_ID,		       
+		       BASEROLE.ROLE_NAME,
+		       BASEROLE.ROLE_CODE,
+		       BASEROLE.ROLE_DESC,       
+		       BASEROLE.LAST_UPDATE_LOGIN,
+		       BASEROLE.LAST_UPDATED_BY,
+		       TO_CHAR(BASEROLE.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASEROLE.CREATED_BY,
+		       TO_CHAR(BASEROLE.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM AUPORTAL.BASE_ROLE_VL BASEROLE
+	     WHERE 1=1
+	     <if test="roleName != null and ''!= roleName">
+		 	  AND BASEROLE.ROLE_NAME = #{roleName}
+	 	 </if>
+	 	 <if test="roleCode != null and ''!= roleCode">
+		 	  AND BASEROLE.ROLE_CODE = #{roleCode}
+	 	 </if>
+	 	 <if test="roleId != null and ''!= roleId">
+		 	  AND BASEROLE.ROLE_ID = #{roleId}
+	 	 </if>
+	 	 ORDER BY ROLE_ID ASC
+	</select>
+	
+	
+	<select id="getRoleById"  resultMap="RoleMap" parameterType="java.lang.String">
+		SELECT BASEROLE.ROLE_ID,		       
+		       BASEROLE.ROLE_NAME,
+		       BASEROLE.ROLE_CODE,
+		       BASEROLE.ROLE_DESC,       
+		       BASEROLE.LAST_UPDATE_LOGIN,
+		       BASEROLE.LAST_UPDATED_BY,
+		       TO_CHAR(BASEROLE.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASEROLE.CREATED_BY,
+		       TO_CHAR(BASEROLE.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM AUPORTAL.BASE_ROLE_VL BASEROLE
+	     WHERE BASEROLE.ROLE_ID = #{roleId}
+	</select>
+	
+	<insert id="saveRole" parameterType="com.aus.authority.model.RoleDto">
+	    <selectKey resultType="java.lang.String" order="BEFORE" keyProperty="roleId">
+			SELECT BASE.BASE_ROLE_S.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO BASE.BASE_ROLE
+		  (
+		  <trim suffixOverrides=",">
+			   ROLE_ID,
+			   <if test="roleCode != null and ''!= roleCode">
+			 	  ROLE_CODE,
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN,
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY,
+		 	   </if>
+			   LAST_UPDATE_DATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY,
+		 	   </if>
+			   CREATION_DATE,		  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			   #{roleId},
+			   <if test="roleCode != null and ''!= roleCode">
+			 	  #{roleCode},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  #{lastUpdatedBy},
+		 	   </if>
+			   SYSDATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  #{createdBy},
+		 	   </if>
+			   SYSDATE,
+		   </trim>
+		  )	
+	</insert>
+	
+	<update id="updateRole" parameterType="com.aus.authority.model.RoleDto">
+		UPDATE BASE.BASE_ROLE A
+		   SET 
+		   <trim suffixOverrides=",">	   
+		   	   <if test="roleCode != null and ''!= roleCode">
+			 	  A.ROLE_CODE = #{roleCode}, 
+		 	   </if>		       
+		       <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  A.LAST_UPDATE_LOGIN = #{lastUpdateLogin}, 
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  A.LAST_UPDATED_BY = #{lastUpdatedBy},
+		 	   </if>
+		 	   LAST_UPDATE_DATE = SYSDATE
+		   </trim>
+		 WHERE A.ROLE_ID = #{roleId}
+	</update>
+	
+	<update id="updateRoleTl" parameterType="com.aus.authority.model.RoleTlDto">
+		UPDATE BASE.BASE_ROLE_TL A
+		   SET 
+		   <trim suffixOverrides=",">	   
+		   	   <if test="roleName != null and ''!= roleName">
+			 	  ROLE_NAME = #{roleName},
+		 	   </if>
+		 	   <if test="roleDesc != null and ''!= roleDesc">
+			 	  ROLE_DESC = #{roleDesc},
+		 	   </if>	       
+		       <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  A.LAST_UPDATE_LOGIN = #{lastUpdateLogin}, 
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  A.LAST_UPDATED_BY = #{lastUpdatedBy},
+		 	   </if>
+		 	   LAST_UPDATE_DATE = SYSDATE
+		   </trim>
+		 WHERE A.ROLE_ID = #{roleId}
+		   AND A.LANGUAGE = USERENV('LANG')
+	</update>
+	
+	<insert id="saveRoleTl" parameterType="com.aus.authority.model.RoleTlDto">
+		INSERT INTO BASE.BASE_ROLE_TL
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="roleId != null and ''!= roleId">
+			 	  ROLE_ID,
+		 	   </if>
+			   <if test="roleName != null and ''!= roleName">
+			 	  ROLE_NAME,
+		 	   </if>
+		 	   <if test="roleDesc != null and ''!= roleDesc">
+			 	  ROLE_DESC,
+		 	   </if>
+		 	   <if test="language != null and ''!= language">
+			 	  LANGUAGE,
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN,
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY,
+		 	   </if>
+			   LAST_UPDATE_DATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY,
+		 	   </if>
+			   CREATION_DATE,		  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="roleId != null and ''!= roleId">
+			 	  #{roleId},
+		 	   </if>
+			   <if test="roleName != null and ''!= roleName">
+			 	  #{roleName},
+		 	   </if>
+		 	   <if test="roleDesc != null and ''!= roleDesc">
+			 	  #{roleDesc},
+		 	   </if>
+		 	   <if test="language != null and ''!= language">
+			 	  #{language},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  #{lastUpdatedBy},
+		 	   </if>
+			   SYSDATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  #{createdBy},
+		 	   </if>
+			   SYSDATE,
+		   </trim>
+		  )	
+	</insert>
+	
+	
+	<insert id="saveRoleFunc" parameterType="com.aus.authority.model.RoleFuncDto">
+		INSERT INTO BASE.BASE_ROLE_FUNCTION
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="roleId != null and ''!= roleId">
+			 	  ROLE_ID,
+		 	   </if>
+			   <if test="menuNodeId != null and ''!= menuNodeId">
+			 	  MENU_NODE_ID,
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN,
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY,
+		 	   </if>
+			   LAST_UPDATE_DATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY,
+		 	   </if>
+			   CREATION_DATE,		  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="roleId != null and ''!= roleId">
+			 	  #{roleId},
+		 	   </if>
+			   <if test="menuNodeId != null and ''!= menuNodeId">
+			 	  #{menuNodeId},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  #{lastUpdatedBy},
+		 	   </if>
+			   SYSDATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  #{createdBy},
+		 	   </if>
+			   SYSDATE,
+		   </trim>
+		  )	
+	</insert>
+	
+	<insert id="saveRoleResource" parameterType="com.aus.authority.model.RoleResourceDto">
+		INSERT INTO BASE.BASE_ROLE_RESOURCE
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="roleId != null and ''!= roleId">
+			 	  ROLE_ID,
+		 	   </if>
+			   <if test="resourceId != null and ''!= resourceId">
+			 	  RESOURCE_ID,
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN,
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY,
+		 	   </if>
+			   LAST_UPDATE_DATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY,
+		 	   </if>
+			   CREATION_DATE,
+			   RESOURCE_VALUE		  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="roleId != null and ''!= roleId">
+			 	  #{roleId},
+		 	   </if>
+			   <if test="resourceId != null and ''!= resourceId">
+			 	  #{resourceId},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  #{lastUpdatedBy},
+		 	   </if>
+			   SYSDATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  #{createdBy},
+		 	   </if>
+			   SYSDATE,
+			   1,
+		   </trim>
+		  )	
+	</insert>
+	
+	
+	<select id="getRoleFuncById"  resultMap="RoleFuncMap" parameterType="java.lang.String">
+		SELECT BASEROLE.ROLE_ID,		       
+		       BASEROLE.MENU_NODE_ID,    
+		       BASEROLE.LAST_UPDATE_LOGIN,
+		       BASEROLE.LAST_UPDATED_BY,
+		       TO_CHAR(BASEROLE.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASEROLE.CREATED_BY,
+		       TO_CHAR(BASEROLE.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM AUPORTAL.BASE_ROLE_FUNCTION BASEROLE
+	     WHERE BASEROLE.ROLE_ID = #{roleId}
+	</select>
+	
+	<select id="getRoleResourceById"  resultMap="RoleResourceMap" parameterType="java.lang.String">
+		SELECT BASEROLE.ROLE_ID,		       
+		       BASEROLE.RESOURCE_ID,    
+		       BASEROLE.LAST_UPDATE_LOGIN,
+		       BASEROLE.LAST_UPDATED_BY,
+		       TO_CHAR(BASEROLE.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASEROLE.CREATED_BY,
+		       TO_CHAR(BASEROLE.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM AUPORTAL.BASE_ROLE_RESOURCE BASEROLE
+	     WHERE BASEROLE.ROLE_ID = #{roleId}
+	</select>
+	
+	<select id="checkUsedRole" resultType="java.lang.Long" parameterType="java.lang.String">
+		SELECT COUNT(1)
+		  FROM BASE.BASE_RESPONSIBILITY_ROLE A
+	     WHERE A.ROLE_ID = #{roleId}
+	</select> 	
+	
+    <select id="findAllSysLanguage" resultType="java.lang.String">
+		SELECT LANGUAGE_CODE
+  		  FROM AUPORTAL.BASE_LANGUAGE_V
+	</select>
+	
+	<delete id="deleteRoleFuncById" parameterType="java.lang.String">  
+        DELETE FROM BASE.BASE_ROLE_FUNCTION WHERE ROLE_ID = #{roleId}  
+    </delete>
+    
+    <delete id="deleteRoleById" parameterType="java.lang.String">  
+        DELETE FROM BASE.BASE_ROLE WHERE ROLE_ID = #{roleId}  
+    </delete>
+    
+    <delete id="deleteRoleTlById" parameterType="java.lang.String">  
+        DELETE FROM BASE.BASE_ROLE_TL WHERE ROLE_ID = #{roleId}  
+    </delete>
+    
+    
+    <delete id="deleteRoleResourceById" parameterType="java.lang.String">  
+        DELETE FROM BASE.BASE_ROLE_RESOURCE WHERE ROLE_ID = #{roleId}  
+    </delete>  
+	
+	
+</mapper>

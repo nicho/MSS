@@ -1,0 +1,646 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.aus.authority.dao.IResponsibilityDao">
+
+	<resultMap id="ResponsibilityMap" type="com.aus.authority.model.ResponsibilityDto">
+		<id column="RESPONSIBILITY_ID" property="responsibilityId" jdbcType="VARCHAR" />
+		<result column="RESPONSIBILITY_NAME" property="responsibilityName" jdbcType="VARCHAR" />
+		<result column="RESPONSIBILITY_CODE" property="responsibilityCode" jdbcType="VARCHAR" />
+		<result column="RESPONSIBILITY_DESC" property="responsibilityDesc" jdbcType="VARCHAR" />
+		<result column="BEGIN_DATE" property="beginDate" jdbcType="VARCHAR" />
+		<result column="END_DATE" property="endDate" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+		<result column="ORG_ID" property="orgId" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="ResponsibilityTlMap" type="com.aus.authority.model.ResponsibilityTlDto">
+		<result column="RESPONSIBILITY_ID" property="responsibilityId" jdbcType="VARCHAR" />
+		<result column="RESPONSIBILITY_NAME" property="responsibilityName" jdbcType="VARCHAR" />
+		<result column="RESPONSIBILITY_DESC" property="responsibilityDesc" jdbcType="VARCHAR" />
+		<result column="LANGUAGE" property="language" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="ResponsibilityRoleMap" type="com.aus.authority.model.ResponsibilityRoleDto">
+		<result column="RESPONSIBILITY_ID" property="responsibilityId" jdbcType="VARCHAR" />
+		<result column="ROLE_ID" property="roleId" jdbcType="VARCHAR" />
+		<result column="ROLE_NAME" property="roleName" jdbcType="VARCHAR" />
+		<result column="ROLE_CODE" property="roleCode" jdbcType="VARCHAR" />
+		<result column="ROLE_DESC" property="roleDesc" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="ResponsibilityProfileMap" type="com.aus.authority.model.ResponsibilityProfileDto">
+		<result column="RESPONSIBILITY_ID" property="responsibilityId" jdbcType="VARCHAR" />
+		<result column="PROFILE_ID" property="profileId" jdbcType="VARCHAR" />
+		<result column="PROFILE_NAME" property="profileName" jdbcType="VARCHAR" />
+		<result column="PROFILE_CODE" property="profileCode" jdbcType="VARCHAR" />
+		<result column="PROFILE_DESC" property="profileDesc" jdbcType="VARCHAR" />
+		<result column="PROFILE_VALUE" property="profileValue" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<select id="getAllResponsibility"  resultMap="ResponsibilityMap" parameterType="com.aus.authority.model.ResponsibilityDto">
+		SELECT BASERESPONSIBILITY.RESPONSIBILITY_ID,		       
+		       BASERESPONSIBILITY.RESPONSIBILITY_NAME,
+		       BASERESPONSIBILITY.RESPONSIBILITY_CODE,
+		       BASERESPONSIBILITY.RESPONSIBILITY_DESC,
+		       TO_CHAR(BASERESPONSIBILITY.BEGIN_DATE,'YYYY-MM-DD') BEGIN_DATE,
+		       TO_CHAR(BASERESPONSIBILITY.END_DATE,'YYYY-MM-DD') END_DATE,   
+		       BASERESPONSIBILITY.LAST_UPDATE_LOGIN,
+		       BASERESPONSIBILITY.LAST_UPDATED_BY,
+		       TO_CHAR(BASERESPONSIBILITY.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASERESPONSIBILITY.CREATED_BY,
+		       TO_CHAR(BASERESPONSIBILITY.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM AUPORTAL.BASE_RESPONSIBILITY_VL BASERESPONSIBILITY
+	     WHERE 1=1  AND BASERESPONSIBILITY.END_DATE>SYSDATE
+	     <if test="responsibilityName != null and ''!= responsibilityName">
+		 	  AND BASERESPONSIBILITY.RESPONSIBILITY_NAME LIKE '%'|| #{responsibilityName} ||'%'
+	 	 </if>
+	 	 <if test="responsibilityCode != null and ''!= responsibilityCode">
+		 	  AND BASERESPONSIBILITY.RESPONSIBILITY_CODE LIKE '%'|| #{responsibilityCode} ||'%'
+	 	 </if>
+	 	 <if test="orgId != null and ''!= orgId">
+		 	  AND BASERESPONSIBILITY.RESPONSIBILITY_ID IN
+                 (SELECT B.RESPONSIBILITY_ID
+                    FROM AUPORTAL.BASE_PROFILE_VL    A,
+                         AUPORTAL.BASE_PROFILE_VALUE B,
+                         (SELECT CAB.ORG_ID                   ORG_ID,
+				                 CAB.USER_ID                  ORG_ID_CHILD,
+				                 CAB.SECONDARY_INVENTORY_NAME ORG_NAME_CHILD,
+				                 CAB.CUST_ACCOUNT_ID          LEVEL_TYPE
+				            FROM CUX.CUX_CDM_ACCESS_BASEDATA CAB
+				           WHERE CAB.ACCESS_TYPE = '9'
+				             AND CAB.CUST_ACCOUNT_ID IN (2, 3)) ORG
+                   WHERE A.PROFILE_ID = B.PROFILE_ID
+                     AND A.PROFILE_CODE = 'ORG_ID'
+                     AND B.PROFILE_VALUE = ORG.ORG_ID_CHILD
+                     AND ORG.ORG_ID = #{orgId}
+               )
+	 	 </if>
+	 	 <if test="isValid != null and ''!= isValid">
+	 		  <![CDATA[
+		 	  AND TO_CHAR(BASERESPONSIBILITY.BEGIN_DATE,'YYYY-MM-DD') <= TO_CHAR(SYSDATE,'YYYY-MM-DD')
+		 	  ]]>
+		 	  AND TO_CHAR(BASERESPONSIBILITY.END_DATE,'YYYY-MM-DD') >= TO_CHAR(SYSDATE,'YYYY-MM-DD')
+	 	 </if>
+	 	 ORDER BY RESPONSIBILITY_NAME DESC
+	</select>
+	
+	<select id="getResponsibilityByResponsibility"  resultMap="ResponsibilityMap" parameterType="com.aus.authority.model.ResponsibilityDto">
+		SELECT BASERESPONSIBILITY.RESPONSIBILITY_ID,		       
+		       BASERESPONSIBILITY.RESPONSIBILITY_NAME,
+		       BASERESPONSIBILITY.RESPONSIBILITY_CODE,
+		       BASERESPONSIBILITY.RESPONSIBILITY_DESC,
+		       TO_CHAR(BASERESPONSIBILITY.BEGIN_DATE,'YYYY-MM-DD') BEGIN_DATE,
+		       TO_CHAR(BASERESPONSIBILITY.END_DATE,'YYYY-MM-DD') END_DATE,   
+		       BASERESPONSIBILITY.LAST_UPDATE_LOGIN,
+		       BASERESPONSIBILITY.LAST_UPDATED_BY,
+		       TO_CHAR(BASERESPONSIBILITY.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASERESPONSIBILITY.CREATED_BY,
+		       TO_CHAR(BASERESPONSIBILITY.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM AUPORTAL.BASE_RESPONSIBILITY_VL BASERESPONSIBILITY
+	     WHERE 1=1
+	     <if test="responsibilityName != null and ''!= responsibilityName">
+		 	  AND BASERESPONSIBILITY.RESPONSIBILITY_NAME = #{responsibilityName}
+	 	 </if>
+	 	 <if test="responsibilityCode != null and ''!= responsibilityCode">
+		 	  AND BASERESPONSIBILITY.RESPONSIBILITY_CODE = #{responsibilityCode}
+	 	 </if>
+	 	 <if test="responsibilityId != null and ''!= responsibilityId">
+		 	  AND BASERESPONSIBILITY.RESPONSIBILITY_ID = #{responsibilityId}
+	 	 </if>
+	 	 
+	 	 
+	 	 ORDER BY RESPONSIBILITY_NAME DESC
+	</select>
+	
+	<select id="getResponsibilityById"  resultMap="ResponsibilityMap" parameterType="java.lang.String">
+		SELECT BASERESPONSIBILITY.RESPONSIBILITY_ID,		       
+		       BASERESPONSIBILITY.RESPONSIBILITY_NAME,
+		       BASERESPONSIBILITY.RESPONSIBILITY_CODE,
+		       BASERESPONSIBILITY.RESPONSIBILITY_DESC,
+		       TO_CHAR(BASERESPONSIBILITY.BEGIN_DATE,'YYYY-MM-DD') BEGIN_DATE,
+		       TO_CHAR(BASERESPONSIBILITY.END_DATE,'YYYY-MM-DD') END_DATE,   
+		       BASERESPONSIBILITY.LAST_UPDATE_LOGIN,
+		       BASERESPONSIBILITY.LAST_UPDATED_BY,
+		       TO_CHAR(BASERESPONSIBILITY.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASERESPONSIBILITY.CREATED_BY,
+		       TO_CHAR(BASERESPONSIBILITY.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM AUPORTAL.BASE_RESPONSIBILITY_VL BASERESPONSIBILITY
+	     WHERE BASERESPONSIBILITY.RESPONSIBILITY_ID = #{responsibilityId}
+	</select>
+	
+	<select id="findResponsibilityByUserId"  resultMap="ResponsibilityMap" parameterType="java.lang.String">
+		SELECT BASERESPONSIBILITY.RESPONSIBILITY_ID,		       
+		       BASERESPONSIBILITY.RESPONSIBILITY_NAME,
+		       BASERESPONSIBILITY.RESPONSIBILITY_CODE,
+		       BASERESPONSIBILITY.RESPONSIBILITY_DESC,
+		       TO_CHAR(RU.BEGIN_DATE,'YYYY-MM-DD') BEGIN_DATE,
+		   <!--     TO_CHAR(BASERESPONSIBILITY.END_DATE,'YYYY-MM-DD') END_DATE,    -->
+		       BASERESPONSIBILITY.LAST_UPDATE_LOGIN,
+		       BASERESPONSIBILITY.LAST_UPDATED_BY,
+		       TO_CHAR(BASERESPONSIBILITY.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASERESPONSIBILITY.CREATED_BY,
+		       TO_CHAR(BASERESPONSIBILITY.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE,
+		        (SELECT ORG.ORG_ID
+                    FROM AUPORTAL.BASE_PROFILE_VL    A,
+                         AUPORTAL.BASE_PROFILE_VALUE B,
+                         (SELECT CAB.ORG_ID                   ORG_ID,
+				                 CAB.USER_ID                  ORG_ID_CHILD,
+				                 CAB.SECONDARY_INVENTORY_NAME ORG_NAME_CHILD,
+				                 CAB.CUST_ACCOUNT_ID          LEVEL_TYPE
+				            FROM CUX.CUX_CDM_ACCESS_BASEDATA CAB
+				           WHERE CAB.ACCESS_TYPE = '9'
+				             AND CAB.CUST_ACCOUNT_ID='2') ORG
+                   WHERE A.PROFILE_ID = B.PROFILE_ID
+                     AND A.PROFILE_CODE = 'ORG_ID'
+                     AND B.PROFILE_VALUE = ORG.ORG_ID_CHILD
+                     AND B.RESPONSIBILITY_ID = BASERESPONSIBILITY.RESPONSIBILITY_ID
+               )ORG_ID
+		  FROM AUPORTAL.BASE_RESPONSIBILITY_VL BASERESPONSIBILITY,
+		  	   BASE.BASE_RESPONSIBILITY_USER RU
+	     WHERE BASERESPONSIBILITY.RESPONSIBILITY_ID = RU.RESPONSIBILITY_ID
+	       AND RU.USER_ID = #{userId}
+	       ORDER BY BASERESPONSIBILITY.RESPONSIBILITY_NAME ASC
+	</select>
+	
+	<select id="findResponsibilityByUserIdAndOther"  resultMap="ResponsibilityMap" parameterType="com.aus.authority.model.ResponsibilityDto">
+		SELECT BASERESPONSIBILITY.RESPONSIBILITY_ID,		       
+		       BASERESPONSIBILITY.RESPONSIBILITY_NAME,
+		       BASERESPONSIBILITY.RESPONSIBILITY_CODE,
+		       BASERESPONSIBILITY.RESPONSIBILITY_DESC,
+		       TO_CHAR(RU.BEGIN_DATE,'YYYY-MM-DD') BEGIN_DATE,
+		   <!--     TO_CHAR(BASERESPONSIBILITY.END_DATE,'YYYY-MM-DD') END_DATE,    -->
+		       BASERESPONSIBILITY.LAST_UPDATE_LOGIN,
+		       BASERESPONSIBILITY.LAST_UPDATED_BY,
+		       TO_CHAR(BASERESPONSIBILITY.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASERESPONSIBILITY.CREATED_BY,
+		       TO_CHAR(BASERESPONSIBILITY.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE,
+		        (SELECT ORG.ORG_ID
+                    FROM AUPORTAL.BASE_PROFILE_VL    A,
+                         AUPORTAL.BASE_PROFILE_VALUE B,
+                         (SELECT CAB.ORG_ID                   ORG_ID,
+				                 CAB.USER_ID                  ORG_ID_CHILD,
+				                 CAB.SECONDARY_INVENTORY_NAME ORG_NAME_CHILD,
+				                 CAB.CUST_ACCOUNT_ID          LEVEL_TYPE
+				            FROM CUX.CUX_CDM_ACCESS_BASEDATA CAB
+				           WHERE CAB.ACCESS_TYPE = '9'
+				             AND CAB.CUST_ACCOUNT_ID='2') ORG
+                   WHERE A.PROFILE_ID = B.PROFILE_ID
+                     AND A.PROFILE_CODE = 'ORG_ID'
+                     AND B.PROFILE_VALUE = ORG.ORG_ID_CHILD
+                     AND B.RESPONSIBILITY_ID = BASERESPONSIBILITY.RESPONSIBILITY_ID
+               )ORG_ID
+		  FROM AUPORTAL.BASE_RESPONSIBILITY_VL BASERESPONSIBILITY,
+		  	   BASE.BASE_RESPONSIBILITY_USER RU
+	     WHERE BASERESPONSIBILITY.RESPONSIBILITY_ID = RU.RESPONSIBILITY_ID
+	       AND RU.USER_ID = #{userId}
+	         <if test="responsibilityName != null and ''!= responsibilityName">
+		 	  AND BASERESPONSIBILITY.RESPONSIBILITY_NAME = #{responsibilityName}
+	 	 </if>
+	 	 <if test="responsibilityCode != null and ''!= responsibilityCode">
+		 	  AND BASERESPONSIBILITY.RESPONSIBILITY_CODE = #{responsibilityCode}
+	 	 </if>
+	 	 <if test="responsibilityId != null and ''!= responsibilityId">
+		 	  AND BASERESPONSIBILITY.RESPONSIBILITY_ID = #{responsibilityId}
+	 	 </if>
+	       ORDER BY BASERESPONSIBILITY.RESPONSIBILITY_NAME ASC
+	</select>
+	
+	
+		<select id="findResponsibilityByUserAndOrg"  resultMap="ResponsibilityMap" parameterType="java.lang.String">
+          SELECT * FROM (SELECT BASERESPONSIBILITY.RESPONSIBILITY_ID,           
+           BASERESPONSIBILITY.RESPONSIBILITY_NAME,
+           BASERESPONSIBILITY.RESPONSIBILITY_CODE,
+           BASERESPONSIBILITY.RESPONSIBILITY_DESC,
+           TO_CHAR(BASERESPONSIBILITY.BEGIN_DATE,'YYYY-MM-DD') BEGIN_DATE,
+           TO_CHAR(BASERESPONSIBILITY.END_DATE,'YYYY-MM-DD') END_DATE,   
+           BASERESPONSIBILITY.LAST_UPDATE_LOGIN,
+           BASERESPONSIBILITY.LAST_UPDATED_BY,
+           TO_CHAR(BASERESPONSIBILITY.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+           BASERESPONSIBILITY.CREATED_BY,
+           TO_CHAR(BASERESPONSIBILITY.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE,
+            (SELECT ORG.ORG_ID
+                    FROM AUPORTAL.BASE_PROFILE_VL    A,
+                         AUPORTAL.BASE_PROFILE_VALUE B,
+                         (SELECT CAB.ORG_ID                   ORG_ID,
+                         CAB.USER_ID                  ORG_ID_CHILD,
+                         CAB.SECONDARY_INVENTORY_NAME ORG_NAME_CHILD,
+                         CAB.CUST_ACCOUNT_ID          LEVEL_TYPE
+                    FROM CUX.CUX_CDM_ACCESS_BASEDATA CAB
+                   WHERE CAB.ACCESS_TYPE = '9'
+                     AND CAB.CUST_ACCOUNT_ID='2') ORG
+                   WHERE A.PROFILE_ID = B.PROFILE_ID
+                     AND A.PROFILE_CODE = 'ORG_ID'
+                     AND B.PROFILE_VALUE = ORG.ORG_ID_CHILD
+                     AND B.RESPONSIBILITY_ID = BASERESPONSIBILITY.RESPONSIBILITY_ID
+               )ORG_ID
+		  FROM AUPORTAL.BASE_RESPONSIBILITY_VL BASERESPONSIBILITY,
+		  	   BASE.BASE_RESPONSIBILITY_USER RU
+	     WHERE BASERESPONSIBILITY.RESPONSIBILITY_ID = RU.RESPONSIBILITY_ID
+	       AND RU.USER_ID =#{userId}) EE
+           WHERE 1=1 AND EE.ORG_ID = #{orgId}
+	       ORDER BY EE.RESPONSIBILITY_NAME ASC
+	</select>
+	
+	
+	
+	
+	<select id="getResponsibilityRoleById"  resultMap="ResponsibilityRoleMap" parameterType="java.lang.String">
+		SELECT BASERESPONSIBILITY.RESPONSIBILITY_ID,
+			   BASEROLE.ROLE_ID,		       
+		       BASEROLE.ROLE_NAME,
+		       BASEROLE.ROLE_CODE,
+		       BASEROLE.ROLE_DESC
+		  FROM BASE.BASE_RESPONSIBILITY_ROLE BASERESPONSIBILITY,
+		  	   AUPORTAL.BASE_ROLE_VL BASEROLE
+	     WHERE BASERESPONSIBILITY.ROLE_ID = BASEROLE.ROLE_ID
+	       AND BASERESPONSIBILITY.RESPONSIBILITY_ID = #{responsibilityId}
+	</select>
+	
+	<select id="getResponsibilityProfileById"  resultMap="ResponsibilityProfileMap" parameterType="java.lang.String">
+		SELECT PROFILEVALUE.RESPONSIBILITY_ID,
+			   BASEPROFILE.PROFILE_ID,		       
+		       BASEPROFILE.PROFILE_NAME,
+		       BASEPROFILE.PROFILE_CODE,
+		       BASEPROFILE.PROFILE_DESC,
+		       PROFILEVALUE.PROFILE_VALUE
+		  FROM AUPORTAL.BASE_PROFILE_VL BASEPROFILE,
+		  	   AUPORTAL.BASE_PROFILE_VALUE PROFILEVALUE
+	     WHERE BASEPROFILE.PROFILE_ID = PROFILEVALUE.PROFILE_ID
+	       AND PROFILEVALUE.RESPONSIBILITY_ID = #{responsibilityId}
+	</select>
+	
+	<insert id="saveResponsibility" parameterType="com.aus.authority.model.ResponsibilityDto">
+	    <selectKey resultType="java.lang.String" order="BEFORE" keyProperty="responsibilityId">
+			SELECT BASE.BASE_RESPONSIBILITY_S.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO BASE.BASE_RESPONSIBILITY
+		  (
+		  <trim suffixOverrides=",">
+			   RESPONSIBILITY_ID,
+			   <if test="responsibilityCode != null and ''!= responsibilityCode">
+			 	  RESPONSIBILITY_CODE,
+		 	   </if>
+		 	   <if test="beginDate != null and ''!= beginDate">
+			 	  BEGIN_DATE,
+		 	   </if>
+		 	   <if test="endDate != null and ''!= endDate">
+			 	  END_DATE,
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN,
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY,
+		 	   </if>
+			   LAST_UPDATE_DATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY,
+		 	   </if>
+			   CREATION_DATE,		  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			   #{responsibilityId},
+			   <if test="responsibilityCode != null and ''!= responsibilityCode">
+			 	  #{responsibilityCode},
+		 	   </if>
+		 	    <if test="beginDate != null and ''!= beginDate">
+			 	  TO_DATE(#{beginDate},'yyyy-mm-dd'),
+		 	   </if>
+		 	   <if test="endDate != null and ''!= endDate">
+			 	  TO_DATE(#{endDate},'yyyy-mm-dd'),
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  #{lastUpdatedBy},
+		 	   </if>
+			   SYSDATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  #{createdBy},
+		 	   </if>
+			   SYSDATE,
+		   </trim>
+		  )	
+	</insert>
+	
+	<insert id="saveResponsibilityTl" parameterType="com.aus.authority.model.ResponsibilityTlDto">
+		INSERT INTO BASE.BASE_RESPONSIBILITY_TL
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="responsibilityId != null and ''!= responsibilityId">
+			 	  RESPONSIBILITY_ID,
+		 	   </if>
+			   <if test="responsibilityName != null and ''!= responsibilityName">
+			 	  RESPONSIBILITY_NAME,
+		 	   </if>
+		 	   <if test="responsibilityDesc != null and ''!= responsibilityDesc">
+			 	  RESPONSIBILITY_DESC,
+		 	   </if>
+		 	   <if test="language != null and ''!= language">
+			 	  LANGUAGE,
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN,
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY,
+		 	   </if>
+			   LAST_UPDATE_DATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY,
+		 	   </if>
+			   CREATION_DATE,		  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="responsibilityId != null and ''!= responsibilityId">
+			 	  #{responsibilityId},
+		 	   </if>
+			   <if test="responsibilityName != null and ''!= responsibilityName">
+			 	  #{responsibilityName},
+		 	   </if>
+		 	   <if test="responsibilityDesc != null and ''!= responsibilityDesc">
+			 	  #{responsibilityDesc},
+		 	   </if>
+		 	   <if test="language != null and ''!= language">
+			 	  #{language},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  #{lastUpdatedBy},
+		 	   </if>
+			   SYSDATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  #{createdBy},
+		 	   </if>
+			   SYSDATE,
+		   </trim>
+		  )	
+	</insert>
+	
+	<insert id="saveResponsibilityRole" parameterType="com.aus.authority.model.ResponsibilityRoleDto">
+		INSERT INTO BASE.BASE_RESPONSIBILITY_ROLE
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="responsibilityId != null and ''!= responsibilityId">
+			 	  RESPONSIBILITY_ID,
+		 	   </if>
+			   <if test="roleId != null and ''!= roleId">
+			 	  ROLE_ID,
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN,
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY,
+		 	   </if>
+			   LAST_UPDATE_DATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY,
+		 	   </if>
+			   CREATION_DATE,		  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="responsibilityId != null and ''!= responsibilityId">
+			 	  #{responsibilityId},
+		 	   </if>
+			   <if test="roleId != null and ''!= roleId">
+			 	  #{roleId},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  #{lastUpdatedBy},
+		 	   </if>
+			   SYSDATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  #{createdBy},
+		 	   </if>
+			   SYSDATE,
+		   </trim>
+		  )	
+	</insert>
+	
+	<insert id="saveResponsibilityProfile" parameterType="com.aus.authority.model.ResponsibilityProfileDto">
+		INSERT INTO BASE.BASE_PROFILE_VALUE
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="responsibilityId != null and ''!= responsibilityId">
+			 	  RESPONSIBILITY_ID,
+		 	   </if>
+			   <if test="profileId != null and ''!= profileId">
+			 	  PROFILE_ID,
+		 	   </if>
+		 	   <if test="profileValue != null and ''!= profileValue">
+			 	  PROFILE_VALUE,
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN,
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY,
+		 	   </if>
+			   LAST_UPDATE_DATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY,
+		 	   </if>
+			   CREATION_DATE,		  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="responsibilityId != null and ''!= responsibilityId">
+			 	  #{responsibilityId},
+		 	   </if>
+			   <if test="profileId != null and ''!= profileId">
+			 	  #{profileId},
+		 	   </if>
+		 	   <if test="profileValue != null and ''!= profileValue">
+			 	  #{profileValue},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  #{lastUpdatedBy},
+		 	   </if>
+			   SYSDATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  #{createdBy},
+		 	   </if>
+			   SYSDATE,
+		   </trim>
+		  )	
+	</insert>
+	
+	
+	<update id="updateResponsibility" parameterType="com.aus.authority.model.ResponsibilityDto">
+		UPDATE BASE.BASE_RESPONSIBILITY A
+		   SET 
+		   <trim suffixOverrides=",">	   		       
+		       <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  A.LAST_UPDATE_LOGIN = #{lastUpdateLogin}, 
+		 	   </if>
+		 	    <if test="beginDate != null and ''!= beginDate">
+			 	  A.BEGIN_DATE = TO_DATE(#{beginDate},'yyyy-mm-dd'),
+		 	   </if>		       
+		       <if test="endDate != null and ''!= endDate">
+			 	  A.END_DATE = TO_DATE(#{endDate},'yyyy-mm-dd'),
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  A.LAST_UPDATED_BY = #{lastUpdatedBy},
+		 	   </if>
+		 	   LAST_UPDATE_DATE = SYSDATE
+		   </trim>
+		 WHERE A.RESPONSIBILITY_ID = #{responsibilityId}
+	</update>
+	
+	<update id="updateResponsibilityTl" parameterType="com.aus.authority.model.ResponsibilityTlDto">
+		UPDATE BASE.BASE_RESPONSIBILITY_TL A
+		   SET 
+		   <trim suffixOverrides=",">	   
+		   	   <if test="responsibilityName != null and ''!= responsibilityName">
+			 	  RESPONSIBILITY_NAME = #{responsibilityName},
+		 	   </if>
+		 	   <if test="responsibilityDesc != null and ''!= responsibilityDesc">
+			 	  RESPONSIBILITY_DESC = #{responsibilityDesc},
+		 	   </if>	       
+		       <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  A.LAST_UPDATE_LOGIN = #{lastUpdateLogin}, 
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  A.LAST_UPDATED_BY = #{lastUpdatedBy},
+		 	   </if>
+		 	   LAST_UPDATE_DATE = SYSDATE
+		   </trim>
+		 WHERE A.RESPONSIBILITY_ID = #{responsibilityId}
+		   AND A.LANGUAGE = USERENV('LANG')
+	</update>
+	
+	<delete id="deleteResponsibilityRoleById" parameterType="java.lang.String">  
+        DELETE FROM BASE.BASE_RESPONSIBILITY_ROLE WHERE RESPONSIBILITY_ID = #{responsibilityId}  
+    </delete>
+    
+    <delete id="deleteResponsibilityProfileById" parameterType="java.lang.String">  
+        DELETE FROM BASE.BASE_PROFILE_VALUE WHERE RESPONSIBILITY_ID = #{responsibilityId}  
+    </delete>  
+	
+	
+	<select id="getOrganizationInvList"  resultType="com.aus.authority.model.ResponsibilityInvOrgDto">
+		SELECT OI.INV_ORGANIZATION_ID as invOrganizationId, OI.INV_ORGANIZATION_NAME as invOrganizationName
+  			FROM AUPORTAL.BASE_ORGANIZATION_INV_V OI
+	</select>
+	
+	<select id="getOrganizationInvByResponsibilityId"  resultType="com.aus.authority.model.ResponsibilityInvOrgDto" parameterType="java.lang.String">
+		select ro.organization_id as invOrganizationId, oi.INV_ORGANIZATION_NAME as invOrganizationName
+		  from BASE.BASE_RESPONSIBILITY_ORG_ACCESS   ro,
+		       auportal.Base_Organization_Inv_v oi
+		 where ro.organization_id = oi.INV_ORGANIZATION_ID
+		   and ro.responsibility_id = #{responsibilityId}
+	</select>
+	<select id="getSelfAndChildOrgId" resultType="com.aus.authority.model.ResponsibilityDto" parameterType="java.lang.String">
+	             SELECT CAB.USER_ID orgId
+                    FROM CUX.CUX_CDM_ACCESS_BASEDATA CAB
+                   WHERE CAB.ACCESS_TYPE = '9'
+                     AND CAB.CUST_ACCOUNT_ID IN（'2','3')
+                     and CAB.ORG_ID  =#{orgId}
+	</select>
+	<delete id="deleteResponsibilityInvOrgById" parameterType="java.lang.String">  
+        DELETE FROM BASE.BASE_RESPONSIBILITY_ORG_ACCESS WHERE responsibility_id=#{responsibilityId}
+    </delete>  
+	
+	<insert id="saveResponsibilityInvOrg" parameterType="com.aus.authority.model.ResponsibilityInvOrgDto">
+		INSERT INTO BASE.BASE_RESPONSIBILITY_ORG_ACCESS
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="responsibilityId != null and ''!= responsibilityId">
+			 	  RESPONSIBILITY_ID,
+		 	   </if>
+			   <if test="invOrganizationId != null and ''!= invOrganizationId">
+			 	  ORGANIZATION_ID,
+		 	   </if>
+			   <if test="isDelete != null and ''!= isDelete">
+			 	  IS_DELETE,
+		 	   </if>
+		 	   LAST_UPDATE_DATE,
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN,
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY,
+		 	   </if>
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY,
+		 	   </if>
+			   CREATION_DATE,		  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="responsibilityId != null and ''!= responsibilityId">
+			 	  #{responsibilityId},
+		 	   </if>
+			   <if test="invOrganizationId != null and ''!= invOrganizationId">
+			 	  #{invOrganizationId},
+		 	   </if>
+		 	   <if test="isDelete != null and ''!= isDelete">
+			 	  #{isDelete},
+		 	   </if>
+		 	   sysdate,
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  #{lastUpdatedBy},
+		 	   </if>
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  #{createdBy},
+		 	   </if>
+			   SYSDATE,
+		   </trim>
+		  )	
+	</insert>
+</mapper>

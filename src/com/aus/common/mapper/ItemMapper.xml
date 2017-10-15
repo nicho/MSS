@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.aus.common.dao.ItemDao">
+	
+	<resultMap id="ItemMap" type="com.aus.common.model.ItemDto">
+		<result column="ORG_ID" property="orgId" jdbcType="VARCHAR" />
+		<result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR" />
+		<result column="ITEM_ID" property="itemId" jdbcType="VARCHAR" />
+		<result column="ITEM_CODE" property="itemCode" jdbcType="VARCHAR" />
+		<result column="ITEM_NAME" property="itemName" jdbcType="VARCHAR" />
+		<result column="UNIT" property="unit" jdbcType="VARCHAR" />	
+	</resultMap>
+	
+	<select id="getItems" resultMap="ItemMap" parameterType="com.aus.common.model.ItemDto">
+
+			SELECT INV_ORG.ORG_ID ORG_ID,
+			       A.ORGANIZATION_ID，               
+			       A.INVENTORY_ITEM_ID ITEM_ID,
+			       A.SEGMENT1                ITEM_CODE,
+			       A.DESCRIPTION             ITEM_NAME,
+			       A.PRIMARY_UNIT_OF_MEASURE UNIT,
+			       /* A.CUSTOMER_ORDER_ENABLED_FLAG,*/
+			       A.ITEM_TYPE
+			  FROM APPS.MTL_SYSTEM_ITEMS_B A,
+			       (SELECT HOU.ORGANIZATION_ID,
+			               /* HOU.BUSINESS_GROUP_ID,
+			               HOU.DATE_FROM USER_DEFINITION_ENABLE_DATE,
+			               HOU.DATE_TO DISABLE_DATE,*/
+			               HOU.NAME ORGANIZATION_NAME,
+			               TO_NUMBER(HOI2.ORG_INFORMATION3) ORG_ID
+			        /*,TO_NUMBER(HOI2.ORG_INFORMATION2) LEGAL_ENTITY */
+			          FROM HR_ORGANIZATION_UNITS       HOU,
+			               HR_ORGANIZATION_INFORMATION HOI2
+			         WHERE HOU.ORGANIZATION_ID = HOI2.ORGANIZATION_ID
+			           AND (HOI2.ORG_INFORMATION_CONTEXT || '') = 'Accounting Information'
+			           AND HOU.ATTRIBUTE3 = 'Y' /* 内部库存组织 */
+			        ) INV_ORG
+			 WHERE A.ORGANIZATION_ID = INV_ORG.ORGANIZATION_ID
+			   AND A.MTL_TRANSACTIONS_ENABLED_FLAG = 'Y'			
+
+			<if test="itemCode != null and ''!= itemCode">
+			   AND A.SEGMENT1 like '%'|| #{itemCode} ||'%'
+			</if>
+			<if test="itemName != null and ''!= itemName">
+			   AND A.DESCRIPTION like '%'|| #{itemName} ||'%'
+			</if>
+			<if test="orgId != null and ''!= orgId">
+			   AND INV_ORG.ORG_ID = #{orgId}
+			</if>
+			ORDER BY A.SEGMENT1
+	</select>
+
+	
+
+   
+</mapper>

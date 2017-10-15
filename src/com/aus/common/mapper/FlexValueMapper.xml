@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.aus.common.dao.FlexValueDao">
+	
+	<resultMap id="FlexValueMap" type="com.aus.common.model.FlexValueDto">
+		<result column="FLEX_VALUE" property="flexValue" jdbcType="VARCHAR" />
+		<result column="FLEX_VALUES_DESC" property="flexValuesDesc" jdbcType="VARCHAR" /> 
+		<result column="description" property="description" jdbcType="VARCHAR" /> 
+	</resultMap>
+ 	<resultMap id="ProductItemResultMap" type="com.aus.common.model.ProductItem">
+		<result column="item_code" property="itemCode" jdbcType="VARCHAR" />
+		<result column="description" property="description" jdbcType="VARCHAR" />
+		<result column="cat_name" property="catName" jdbcType="VARCHAR" />
+		<result column="level_code" property="levelCode" jdbcType="VARCHAR" />
+	</resultMap>
+    <select id="getMemberSysOrgId" parameterType="java.lang.String" resultType="java.lang.String">
+		select v.MEMBER_SYS_ORG_ID from auportal.base_organization_ou_v v where v.OU_ORGANIZATION_ID=#{orgId}
+	</select>
+	<select id="getCityNameList" resultMap="FlexValueMap" parameterType="java.lang.String">  
+select t.code FLEX_VALUE,t.name FLEX_VALUES_DESC   from ausbi.fnd_citys_t t,ausbi.fnd_provinces_t v where t.name LIKE '%'|| #{query} || '%' and t.id!='-' 
+and t.parent_id=v.id  AND t.status='Y' and v.status='Y' 
+union 
+select c.code FLEX_VALUE,c.name FLEX_VALUES_DESC from ausbi.fnd_citys_t t,ausbi.fnd_provinces_t v,ausbi.fnd_countyarea_t c where c.name LIKE '%'|| #{query} || '%' and t.id!='-' 
+and t.parent_id=v.id AND c.parent_id=t.id and t.status='Y' and v.status='Y' and c.status='Y'    
+	</select>
+    <select id="getProvinceNameList" resultMap="FlexValueMap" parameterType="java.lang.String"> 
+	   select t.code FLEX_VALUE,t.name FLEX_VALUES_DESC from ausbi.fnd_provinces_t t where t.name LIKE '%'|| #{query} || '%'   and t.id!='-'
+	</select>
+	
+	 <select id="getProvinceByName" resultMap="FlexValueMap" parameterType="java.lang.String"> 
+	   select t.code FLEX_VALUE,t.name FLEX_VALUES_DESC from ausbi.fnd_provinces_t t where t.name =  #{query}   and t.id!='-'
+	</select>
+	
+	
+		<select id="getCityAndProvince" resultType="com.aus.common.model.CityDto" parameterType="java.lang.String">
+select t.code cityId,t.name cityName,v.code provinceId,v.name provinceName,'' countyId,'' countyName   from ausbi.fnd_citys_t t,ausbi.fnd_provinces_t v where t.name =#{query}  and t.id!='-' 
+and t.parent_id=v.id
+union 
+select t.code cityId,t.name cityName,v.code provinceId,v.name provinceName ,c.code countyId,c.name countyName from ausbi.fnd_citys_t t,ausbi.fnd_provinces_t v,ausbi.fnd_countyarea_t c where c.name =#{query}  and t.id!='-' 
+and t.parent_id=v.id AND c.parent_id=t.id
+ 
+	</select>
+	
+	<select id="getFlexValueList" resultMap="FlexValueMap" parameterType="java.lang.String">
+		SELECT FV.FLEX_VALUE ,FV.FLEX_VALUES_DESC 
+		  FROM BASE_FLEX_VALUE_V FV
+		  WHERE FV.FLEX_VALUE_SET_NAME = #{type} 
+	</select>
+    <select id="getFlexValueListOrderBy" resultMap="FlexValueMap" parameterType="java.lang.String">
+		SELECT FV.FLEX_VALUE ,FV.FLEX_VALUES_DESC 
+		  FROM BASE_FLEX_VALUE_V FV
+		  WHERE FV.FLEX_VALUE_SET_NAME = #{type} ORDER BY FV.FLEX_VALUE
+	</select>
+    <select id="getFlexValueListByParent" resultMap="FlexValueMap" parameterType="java.lang.String">
+	 SELECT FV.FLEX_VALUE_SET_NAME,
+       FV.PARENT_FLEX_VALUE, 
+       FV.FLEX_VALUE, 
+       FV.FLEX_VALUES_DESC 
+  FROM auportal.BASE_FLEX_VALUE_V FV
+ WHERE FV.PARENT_FLEX_VALUE = #{type} 
+	</select>
+	
+	<select id="getLookupValueList" resultMap="FlexValueMap" parameterType="java.lang.String">
+		SELECT LK.LOOKUP_CODE as FLEX_VALUE ,LK.MEANING as FLEX_VALUES_DESC 
+		  FROM AUPORTAL.BASE_LOOKUP_V LK
+		  WHERE LK.LOOKUP_TYPE = #{type}
+		      
+	</select>
+	
+	 <select id="getFlexValueList_ebs" resultMap="FlexValueMap" parameterType="java.lang.String">
+		select fv.FLEX_VALUE as FLEX_VALUE, fvt.FLEX_VALUE_MEANING as FLEX_VALUES_DESC,fvt.description
+		  from fnd_flex_value_sets fvs, fnd_flex_values_tl fvt, fnd_flex_values fv
+		 where fvs.flex_value_set_name = #{type}
+		   and fvs.flex_value_set_id = fv.flex_value_set_id
+		   and fv.flex_value_id = fvt.flex_value_id
+		   and fv.enabled_flag = 'Y' 
+		   and fvt.language = #{language}
+	</select>
+	
+	<select id="getAllProvince" resultMap="FlexValueMap" >
+		SELECT DISTINCT FV.PARENT_FLEX_VALUE FLEX_VALUE,
+                		FV.PARENT_FLEX_VALUE FLEX_VALUES_DESC
+		  FROM AUPORTAL.BASE_FLEX_VALUE_V FV
+		 WHERE FV.FLEX_VALUE_SET_NAME = 'CUX_STATE'
+		   AND (FV.PARENT_FLEX_VALUE LIKE '%省' OR FV.PARENT_FLEX_VALUE LIKE '%市' OR
+		       FV.PARENT_FLEX_VALUE LIKE '%区')
+	</select>
+	
+	<select id="getCityByProvince" resultMap="FlexValueMap" parameterType="java.lang.String">
+		SELECT FV.FLEX_VALUE, FV.FLEX_VALUES_DESC
+          FROM AUPORTAL.BASE_FLEX_VALUE_V FV
+         WHERE FV.FLEX_VALUE_SET_NAME = 'CUX_STATE'
+           AND FV.PARENT_FLEX_VALUE = #{province}
+	</select>
+	<select id="getTrxSubtypeBytrxType" resultMap="FlexValueMap" parameterType="java.lang.String">
+		SELECT FV.FLEX_VALUE, FV.FLEX_VALUES_DESC
+          FROM AUPORTAL.BASE_FLEX_VALUE_V FV
+         WHERE FV.FLEX_VALUE_SET_NAME = 'OA_AGT_S_TYPE'
+           AND FV.PARENT_FLEX_VALUE = #{province}
+	</select>
+	
+		<select id="getFlexValueByParent" resultType="com.aus.common.model.FlexValueDto" parameterType="com.aus.common.model.FlexValueDto">
+		SELECT FV.FLEX_VALUE flexValue,FV.FLEX_VALUES_DESC flexValuesDesc 
+		  FROM BASE_FLEX_VALUE_V FV
+		  WHERE FV.FLEX_VALUE_SET_NAME = #{flexValueSetName}
+		  AND FV.PARENT_FLEX_VALUE = #{parentFlexValue}
+	</select>
+	
+    <select id="getProvincesNew" resultType="com.aus.common.model.CodeNameDto" parameterType="com.aus.common.model.QueryCodeNameDto">
+		  select t.id,t.code,t.name from ausbi.fnd_provinces_t t where  t.id!='-' and t.status='Y'
+	</select>
+    <select id="getCitysNew" resultType="com.aus.common.model.CodeNameDto" parameterType="com.aus.common.model.QueryCodeNameDto">
+		  select t.id,t.code,t.name from ausbi.fnd_citys_t t where  t.id!='-' and t.status='Y' and t.parent_id=#{parentId}
+	</select>	
+    <select id="getCountyareaNew" resultType="com.aus.common.model.CodeNameDto" parameterType="com.aus.common.model.QueryCodeNameDto">
+		  select t.id,t.code,t.name from ausbi.fnd_countyarea_t t where  t.id!='-' and t.status='Y' and t.parent_id=#{parentId}
+	</select>	
+	 	<!-- 产品品规查询语句 -->
+	<select id="getProductItem" resultMap="ProductItemResultMap"
+		parameterType="com.aus.common.model.QuartzProductItemDto"> 
+		Select itm.ORG_ID       ou_id,
+       itm.CHANNEL_TYPE,
+       itm.ITEM_CODE,
+       itm.ITEM_DESC    description,
+       itm.CAT_NAME,
+       itm.LEVEL_CODE
+	  From AUPORTAL.Access_Order_Item_v itm
+	  Where itm.ORG_ID = #{orgId}
+ 
+ 	   <if test="channel_type != null and ''!= channel_type">
+	  	 And itm.CHANNEL_TYPE =#{channel_type}
+	   </if> 
+      
+ 	  And itm.ITEM_TYPE = 'FG' 
+  	  And itm.VALID_FLAG='Y'
+		<if test="cuxItemSeries != null and ''!= cuxItemSeries">
+			and itm.CAT_NAME = #{cuxItemSeries}
+		</if>
+		<if test="cuxItemLevel != null and ''!= cuxItemLevel">
+			and itm.LEVEL_CODE = #{cuxItemLevel}
+		</if>
+		<if test="itemCode != null and ''!= itemCode">
+			and itm.item_code = #{itemCode}
+		</if>
+		<if test="description != null and ''!= description">
+			and itm.ITEM_DESC like '%' || #{description} || '%'
+		</if>
+	</select>
+	
+	<select id="getBaseDictValueList" resultType="com.aus.common.model.BaseDictDto"> 
+		SELECT T.CODE,T.CODE_DESCRIPTION FROM BASE.BASE_DICT_T T WHERE T.USEAGE_CODE=#{useage_code} AND T.ORG_ID=#{orgId}
+	</select>
+	
+	<select id="getBaseDicttList" resultMap="FlexValueMap" parameterType="java.lang.String">
+		SELECT CODE AS FLEX_VALUE, CODE_DESCRIPTION AS FLEX_VALUES_DESC
+		  FROM BASE.BASE_DICT_T
+		 WHERE USEAGE_CODE = #{type}
+		   AND VALID_FLAG = 'Y'
+		   AND ORG_ID = #{orgId}
+	</select>
+</mapper>

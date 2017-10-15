@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.aus.common.dao.ICustAccountDao">
+	
+	<resultMap id="CustAccountMap" type="com.aus.common.model.CustAccountDto">
+		<result column="CUST_ACCOUNT_ID" property="custAccountId" jdbcType="VARCHAR" />
+		<result column="ACCOUNT_NAME" property="accountName" jdbcType="VARCHAR" />
+		<result column="ORG_ID" property="orgId" jdbcType="VARCHAR" />
+		<result column="ORG_NAME" property="orgName" jdbcType="VARCHAR" />
+		<result column="CHANNEL_TYPE" property="channelType" jdbcType="VARCHAR" />
+		<result column="DEPARTMENT_CODE" property="departmentCode" jdbcType="VARCHAR" />
+		<result column="CITY" property="city" jdbcType="VARCHAR" />
+		<result column="CHANNEL_NAME" property="channelName" jdbcType="VARCHAR" />
+		<result column="ACCOUNT_NUMBER" property="accountNumber" jdbcType="VARCHAR" />
+		<result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR" />
+		<result column="SECONDARY_INVENTORY_NAME" property="secInvName" jdbcType="VARCHAR" />
+		<result column="DESCRIPTION" property="description" jdbcType="VARCHAR" />
+	</resultMap>
+		<select id="getCustAccountAccountNumber" resultType="com.aus.common.model.CustAccountVo" parameterType="java.lang.String">
+		Select v.ACCOUNT_NUMBER,v.SECONDARY_INVENTORY_NAME From AUPORTAL.Base_Customer_Account_v v where v.CUST_ACCOUNT_ID=#{cust_account_id} and v.ORG_ID=#{org_id}
+	</select>
+	<select id="getCustAccount" resultMap="CustAccountMap" parameterType="com.aus.common.model.CustAccountDto">
+		SELECT HCAR.CUST_ACCOUNT_ID,                         
+		       HCAS.ORG_ID,                                  
+		       HCAR.PARTY_ID CUSTOMER_ID,                    
+		       HCA.ACCOUNT_NUMBER,                           
+		       HCA.ACCOUNT_NAME,                             
+		       HP.PROVINCE DEPARTMENT_CODE,                                  
+		       HCS.ATTRIBUTE2 CHANNEL_TYPE                   
+		  FROM APPS.HZ_CUST_ACCOUNT_ROLES  HCAR,                  
+		       APPS.HZ_RELATIONSHIPS       HR,                    
+		       APPS.HZ_PARTIES             HP,                    
+		       APPS.HZ_CUST_ACCOUNTS       HCA,                   
+		       APPS.HZ_CUST_ACCT_SITES_ALL HCAS,                  
+		       APPS.HZ_CUST_SITE_USES_ALL  HCS,                   
+		       APPS.FND_USER               FU                     
+		 WHERE HR.RELATIONSHIP_CODE = 'CONTACT_OF'           
+		   AND HR.SUBJECT_TYPE = 'PERSON'                    
+		   AND HR.OBJECT_TYPE = 'ORGANIZATION'               
+		   AND HCAR.ROLE_TYPE = 'CONTACT'                    
+		   AND HCAR.PARTY_ID = HR.PARTY_ID                   
+		   AND HR.DIRECTIONAL_FLAG = 'F'                     
+		   AND HCAR.STATUS = 'A'                             
+		   AND HCA.PARTY_ID = HP.PARTY_ID                    
+		   AND HCAR.CUST_ACCOUNT_ID = HCA.CUST_ACCOUNT_ID    
+		   AND HCAR.CUST_ACCOUNT_ID = HCAS.CUST_ACCOUNT_ID   
+		   AND HCAS.CUST_ACCT_SITE_ID = HCS.CUST_ACCT_SITE_ID
+		   AND HCS.SITE_USE_CODE = 'SHIP_TO'                 
+		   AND HCS.PRIMARY_FLAG = 'Y'                        
+		   AND HCAS.STATUS = 'A'                             
+		   AND HCS.STATUS = 'A'                              
+		   AND HCAR.PARTY_ID = FU.CUSTOMER_ID
+		   <if test="custAccountId != null and ''!= custAccountId">
+		    	AND HCAR.CUST_ACCOUNT_ID = #{custAccountId}
+		   </if>  
+		   <if test="userId != null and ''!= userId">
+		    	AND FU.USER_ID = #{userId}
+		   </if>            
+		   <if test="orgId != null and ''!= orgId  ">
+		 	   AND HCAS.ORG_ID in 
+		 	   
+		 	   ( 
+		            SELECT CAB.USER_ID ORG_ID_CHILD  
+		              FROM APPS.CUX_CDM_ACCESS_BASEDATA CAB
+		             WHERE CAB.ACCESS_TYPE = '9'
+		               AND CAB.ORG_ID =#{orgId} 
+		               AND CAB.CUST_ACCOUNT_ID IN (2, 3)
+		 	   )
+	 	   </if>
+		  <if test="channelType != null and ''!= channelType and '90'!= channelType">
+		    AND HCS.ATTRIBUTE2 = #{channelType}
+	 	 </if>
+	
+	</select>
+	
+	<select id="getCustAccountList" resultMap="CustAccountMap" parameterType="com.aus.common.model.CustAccountDto">
+		SELECT T.CUST_ACCOUNT_ID,
+		       T.ACCOUNT_NAME,
+		       T.ORG_ID,
+		       ORG.ORG_NAME_CHILD ORG_NAME,
+		       T.CHANNEL_TYPE,
+		       T.PROVINCE DEPARTMENT_CODE,
+		       T.DISTRICT_NAME CITY,
+		       T.CHANNEL_TYPE_DESC CHANNEL_NAME,
+		       T.ACCOUNT_NUMBER,
+		       T.PROVINCE,
+               T.SECONDARY_INVENTORY_NAME SECONDARY_INVENTORY_NAME,
+               T.SECONDARY_INVENTORY_DESC DESCRIPTION
+		  FROM APPS.CUX_CUST_INVENTORY_V T,
+		       (SELECT CAB.ORG_ID                   ORG_ID, /* 当前组织 */
+		               CAB.USER_ID                  ORG_ID_CHILD, /* 能访问的组织ID */
+		               CAB.SECONDARY_INVENTORY_NAME ORG_NAME_CHILD /* 能访问的组织name */
+		          FROM APPS.CUX_CDM_ACCESS_BASEDATA CAB
+		         WHERE CAB.ACCESS_TYPE = '9'
+		          
+		 <if test="orgId != null and ''!= orgId ">
+		 	   AND CAB.ORG_ID = #{orgId}  
+	 	 </if>
+		           AND CAB.CUST_ACCOUNT_ID IN (2, 3)
+		           ) ORG
+		 WHERE T.ORG_ID = ORG.ORG_ID_CHILD
+		
+	 	 <if test="channelType != null and ''!= channelType and '90'!= channelType">
+		    AND T.CHANNEL_TYPE = #{channelType}
+	 	 </if>
+	 	 <if test="departmentCode != null and ''!= departmentCode">
+		    AND T.PROVINCE = #{departmentCode}
+	 	 </if>
+	 	 <if test="accountNameSelect != null and ''!= accountNameSelect">
+		    AND T.ACCOUNT_NAME like '%'||#{accountNameSelect}||'%'
+	 	 </if>
+	 	 <if test="accountNumber != null and ''!= accountNumber">
+		    AND T.ACCOUNT_NUMBER like '%'||#{accountNumber}||'%'
+	 	 </if>
+	 	  <if test="secInvName != null and ''!= secInvName">
+		    AND T.SECONDARY_INVENTORY_NAME like '%'||#{secInvName}||'%'
+	 	 </if>
+	 	 
+	 	 <if test="conditionSql != null and ''!= conditionSql">
+		    ${conditionSql}
+	 	 </if>
+	 	 ORDER BY T.PROVINCE,T.ACCOUNT_NUMBER DESC
+	</select>
+	
+	<select id="getCustByPersonId" resultMap="CustAccountMap" parameterType="java.lang.String">
+	   SELECT DISTINCT CAB.CUST_ACCOUNT_ID,
+		      T.ACCOUNT_NAME
+		  FROM CUX.CUX_CDM_ACCESS_BASEDATA CAB,
+		       APPS.CUX_CUST_INVENTORY_V T,
+		       APPS.FND_USER           FU
+		 WHERE CAB.ACCESS_TYPE = '2'
+		   AND CAB.USER_ID = FU.USER_ID
+		   AND T.ACCOUNT_NUMBER = CAB.ACCOUNT_NUMBER
+	   <if test="personId != null and ''!= personId">
+	    AND FU.EMPLOYEE_ID = #{personId}
+ 	   </if>
+ 	   <if test="orgId != null and ''!= orgId">
+	    AND CAB.ORG_ID = #{orgId}
+ 	   </if>
+ 	   <if test="channelType != null and ''!= channelType">
+		    AND CAB.CHANNEL_TYPE = #{channelType}
+	   </if>
+ 	   <if test="departmentCode != null and ''!= departmentCode">
+		AND T.PROVINCE = #{departmentCode}	    	
+	   </if>   
+	</select>
+	
+		<select id="getBcCustByPersonId" resultMap="CustAccountMap" parameterType="java.lang.String">
+	   SELECT DISTINCT CAB.CUST_ACCOUNT_ID,
+		      T.ACCOUNT_NAME,
+		      T.ACCOUNT_NUMBER
+		  FROM CUX.CUX_CDM_ACCESS_BASEDATA CAB,
+		       APPS.CUX_CUST_INVENTORY_V T,
+		       APPS.FND_USER           FU
+		 WHERE CAB.ACCESS_TYPE = '2'
+		   AND CAB.USER_ID = FU.USER_ID
+		   AND T.ACCOUNT_NUMBER = CAB.ACCOUNT_NUMBER
+	   <if test="personId != null and ''!= personId">
+	    AND FU.EMPLOYEE_ID = #{personId}
+ 	   </if>
+ 	   <if test="orgId != null and ''!= orgId">
+	    AND CAB.ORG_ID = #{orgId}
+ 	   </if>
+ 	   <if test="channelType != null and ''!= channelType">
+		    AND CAB.CHANNEL_TYPE = #{channelType}
+	   </if>
+ 	   <if test="departmentCode != null and ''!= departmentCode">
+		AND T.PROVINCE = #{departmentCode}	    	
+	   </if> 
+	    <if test="accountNameSelect != null and ''!= accountNameSelect">
+		    AND T.ACCOUNT_NAME like '%'||#{accountNameSelect}||'%'
+	 	 </if>
+	 	 <if test="accountNumber != null and ''!= accountNumber">
+		    AND T.ACCOUNT_NUMBER like '%'||#{accountNumber}||'%'
+	 	 </if>  
+	</select>
+	
+	
+</mapper>

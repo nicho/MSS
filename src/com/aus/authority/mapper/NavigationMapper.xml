@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.aus.authority.dao.INavigationDao">
+
+	<resultMap id="NavigationMap" type="com.aus.authority.model.NavigationDto">
+		<id column="MENU_NODE_ID" property="menuNodeId" jdbcType="VARCHAR" />
+		<result column="MENU_NODE_NAME" property="menuNodeName" jdbcType="VARCHAR" />
+		<result column="MENU_NODE_CODE" property="menuNodeCode" jdbcType="VARCHAR" />
+		<result column="MENU_NODE_DESC" property="menuNodeDesc" jdbcType="VARCHAR" />
+		<result column="PROMPT" property="prompt" jdbcType="VARCHAR" />
+		<result column="PARENT_NODE_ID" property="parentNodeId" jdbcType="VARCHAR" />
+		<result column="ORDER_NUM" property="orderNum" jdbcType="VARCHAR" />
+		<result column="MENU_NODE_TYPE" property="menuNodeType" jdbcType="VARCHAR" />
+		<result column="ORIGINAL_SOURCE" property="OriginalSource" jdbcType="VARCHAR" />
+		<result column="URL" property="url" jdbcType="VARCHAR" />
+		<result column="ICON" property="icon" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="NavigationTlMap" type="com.aus.authority.model.NavigationTlDto">
+		<id column="MENU_NODE_ID" property="menuNodeId" jdbcType="VARCHAR" />
+		<result column="MENU_NODE_NAME" property="menuNodeName" jdbcType="VARCHAR" />
+		<result column="MENU_NODE_DESC" property="menuNodeDesc" jdbcType="VARCHAR" />
+		<result column="PROMPT" property="prompt" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	
+	<select id="getNavigationByParentId"  resultMap="NavigationMap" parameterType="java.lang.String">
+		SELECT BASEMENU.MENU_NODE_ID,		       
+		       BASEMENU.MENU_NODE_NAME,
+		       BASEMENU.MENU_NODE_CODE,
+		       BASEMENU.MENU_NODE_DESC,
+		       BASEMENU.ORIGINAL_SOURCE,
+		       BASEMENU.PROMPT,
+		       BASEMENU.PARENT_NODE_ID,
+		       BASEMENU.ORDER_NUM,
+		       BASEMENU.MENU_NODE_TYPE,
+		       BASEMENU.URL,
+		       BASEMENU.ICON,
+		       BASEMENU.LAST_UPDATE_LOGIN,
+		       BASEMENU.LAST_UPDATED_BY,
+		       TO_CHAR(BASEMENU.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASEMENU.CREATED_BY,
+		       TO_CHAR(BASEMENU.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM BASE_MENU_NODE_VL BASEMENU
+	     WHERE BASEMENU.PARENT_NODE_ID = #{parentId}
+	 	 ORDER BY ORDER_NUM ASC
+	</select>
+    
+    <insert id="insertNavigation" parameterType="com.aus.authority.model.NavigationDto">
+	    <selectKey resultType="java.lang.String" order="BEFORE" keyProperty="menuNodeId">
+			SELECT BASE.BASE_MENU_NODE_S.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO BASE.BASE_MENU_NODE
+		  (
+		  <trim suffixOverrides=",">
+			  MENU_NODE_ID,
+			   <if test="menuNodeCode != null and ''!= menuNodeCode">
+			 	  MENU_NODE_CODE,
+		 	   </if>
+		 	   <if test="menuNodeName != null and ''!= menuNodeName">
+			 	  MENU_NODE_NAME,
+		 	   </if>
+		 	   <if test="parentNodeId != null and ''!= parentNodeId">
+			 	  PARENT_NODE_ID,
+		 	   </if>
+		 	   <if test="orderNum != null and ''!= orderNum">
+			 	  ORDER_NUM,
+		 	   </if>
+		 	   <if test="menuNodeType != null and ''!= menuNodeType">
+			 	  MENU_NODE_TYPE,
+		 	   </if>
+		 	   <if test="OriginalSource != null and ''!= OriginalSource">
+			 	  ORIGINAL_SOURCE,
+		 	   </if>
+		 	   <if test="url != null and ''!= url">
+			 	  URL,
+		 	   </if>
+		 	   <if test="icon != null and ''!= icon">
+			 	  ICON,
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN,
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY,
+		 	   </if>
+			   LAST_UPDATE_DATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY,
+		 	   </if>
+			   CREATION_DATE,		  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			   #{menuNodeId},
+			   <if test="menuNodeCode != null and ''!= menuNodeCode">
+			 	  #{menuNodeCode},
+		 	   </if>
+		 	   <if test="menuNodeName != null and ''!= menuNodeName">
+			 	  #{menuNodeName},
+		 	   </if>
+		 	   <if test="parentNodeId != null and ''!= parentNodeId">
+			 	  #{parentNodeId},
+		 	   </if>
+		 	   <if test="orderNum != null and ''!= orderNum">
+			 	  #{orderNum},
+		 	   </if>
+		 	   <if test="menuNodeType != null and ''!= menuNodeType">
+			 	  #{menuNodeType},
+		 	   </if>
+		 	   <if test="OriginalSource != null and ''!= OriginalSource">
+			 	  #{OriginalSource},
+		 	   </if>
+		 	   <if test="url != null and ''!= url">
+			 	  #{url},
+		 	   </if>
+		 	   <if test="icon != null and ''!= icon">
+			 	  #{icon},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  #{lastUpdatedBy},
+		 	   </if>
+			   SYSDATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  #{createdBy},
+		 	   </if>
+			   SYSDATE,
+		   </trim>
+		  )	
+	</insert>
+	
+	<insert id="insertNavigationTl" parameterType="com.aus.authority.model.NavigationTlDto">
+		INSERT INTO BASE.BASE_MENU_NODE_TL
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="menuNodeId != null and ''!= menuNodeId">
+			 	  MENU_NODE_ID,
+		 	   </if>
+			   <if test="menuNodeName != null and ''!= menuNodeName">
+			 	  MENU_NODE_NAME,
+		 	   </if>
+		 	   <if test="menuNodeDesc != null and ''!= menuNodeDesc">
+			 	  MENU_NODE_DESC,
+		 	   </if>
+		 	   <if test="prompt != null and ''!= prompt">
+			 	  PROMPT,
+		 	   </if>
+		 	   <if test="language != null and ''!= language">
+			 	  LANGUAGE,
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN,
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY,
+		 	   </if>
+			   LAST_UPDATE_DATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY,
+		 	   </if>
+			   CREATION_DATE,		  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="menuNodeId != null and ''!= menuNodeId">
+			 	  #{menuNodeId},
+		 	   </if>
+			   <if test="menuNodeName != null and ''!= menuNodeName">
+			 	  #{menuNodeName},
+		 	   </if>
+		 	   <if test="menuNodeDesc != null and ''!= menuNodeDesc">
+			 	  #{menuNodeDesc},
+		 	   </if>
+		 	   <if test="prompt != null and ''!= prompt">
+			 	  #{prompt},
+		 	   </if>
+		 	   <if test="language != null and ''!= language">
+			 	  #{language},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  #{lastUpdatedBy},
+		 	   </if>
+			   SYSDATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  #{createdBy},
+		 	   </if>
+			   SYSDATE,
+		   </trim>
+		  )	
+	</insert>
+
+	<update id="updateNavigation" parameterType="com.aus.authority.model.NavigationDto">
+		UPDATE BASE.BASE_MENU_NODE A
+		   SET A.MENU_NODE_CODE = #{menuNodeCode},
+		       A.PARENT_NODE_ID = #{parentNodeId},
+		       A.ORDER_NUM = #{orderNum},
+		       A.MENU_NODE_TYPE = #{menuNodeType},
+		       A.ORIGINAL_SOURCE = #{OriginalSource},
+		       A.URL = #{url},
+		       A.ICON = #{icon}
+		 WHERE A.MENU_NODE_ID = #{menuNodeId}
+	</update>
+	
+	<update id="updateNavigationTl" parameterType="com.aus.authority.model.NavigationTlDto">
+		UPDATE BASE.BASE_MENU_NODE_Tl A
+		   SET 
+		   	<trim suffixOverrides=",">
+		   	   <if test="menuNodeName != null and ''!= menuNodeName">
+			 	  A.MENU_NODE_NAME = #{menuNodeName},
+		 	   </if>
+		 	   <if test="menuNodeDesc != null and ''!= menuNodeDesc">
+			 	  A.MENU_NODE_DESC = #{menuNodeDesc},
+		 	   </if>
+		 	   <if test="prompt != null and ''!= prompt">
+			 	  A.PROMPT = #{prompt},
+		 	   </if>
+		       <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN = #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY = #{lastUpdatedBy},
+		 	   </if>
+			   LAST_UPDATE_DATE = SYSDATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY = #{createdBy},
+		 	   </if>
+	        </trim>	
+		 WHERE A.MENU_NODE_ID = #{menuNodeId}
+		   AND A.LANGUAGE = USERENV('LANG')
+	</update>
+	
+	
+	<select id="getNavigationTreeByRoleId"  resultMap="NavigationMap" parameterType="java.lang.String">
+		SELECT DISTINCT  BASEMENU.MENU_NODE_ID,           
+           BASEMENU.MENU_NODE_NAME,
+           BASEMENU.MENU_NODE_CODE,
+           BASEMENU.MENU_NODE_DESC,
+           BASEMENU.PARENT_NODE_ID,
+           BASEMENU.ORDER_NUM,
+           BASEMENU.PROMPT,
+           BASEMENU.MENU_NODE_TYPE,
+           BASEMENU.ORIGINAL_SOURCE,
+           BASEMENU.URL,
+           BASEMENU.ICON,
+           BASEMENU.LAST_UPDATE_LOGIN,
+           BASEMENU.LAST_UPDATED_BY,
+           TO_CHAR(BASEMENU.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+           BASEMENU.CREATED_BY,
+		   TO_CHAR(BASEMENU.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM BASE_MENU_NODE_VL BASEMENU
+     START WITH BASEMENU.MENU_NODE_ID IN 
+          (SELECT ROLEFUC.MENU_NODE_ID  FROM BASE_ROLE_FUNCTION  ROLEFUC WHERE ROLEFUC.ROLE_ID = #{roleId})
+       CONNECT BY BASEMENU.MENU_NODE_ID  = PRIOR BASEMENU.PARENT_NODE_ID
+	</select>
+	
+	
+	<select id="getNavigationTreeByUserId"  resultMap="NavigationMap" parameterType="java.lang.String">
+		SELECT DISTINCT  
+		   BASEMENU.MENU_NODE_ID,           
+           BASEMENU.MENU_NODE_NAME,
+           BASEMENU.MENU_NODE_CODE,
+           BASEMENU.MENU_NODE_DESC,
+           BASEMENU.PARENT_NODE_ID,
+           BASEMENU.ORDER_NUM,
+           BASEMENU.PROMPT,
+           BASEMENU.MENU_NODE_TYPE,
+           BASEMENU.ORIGINAL_SOURCE,
+           BASEMENU.URL,
+           BASEMENU.ICON,
+           BASEMENU.LAST_UPDATE_LOGIN,
+           BASEMENU.LAST_UPDATED_BY,
+           TO_CHAR(BASEMENU.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+           BASEMENU.CREATED_BY,
+		   TO_CHAR(BASEMENU.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM BASE_MENU_NODE_VL BASEMENU
+		  START WITH BASEMENU.MENU_NODE_ID IN 
+		           (SELECT DISTINCT E.MENU_NODE_ID
+					  FROM BASE.BASE_RESPONSIBILITY_USER A,
+					       BASE.BASE_RESPONSIBILITY      B,
+					       BASE.BASE_RESPONSIBILITY_ROLE C,
+					       BASE.BASE_ROLE                D,
+					       BASE.BASE_ROLE_FUNCTION       E
+					 WHERE A.USER_ID = #{userId}
+					   AND A.RESPONSIBILITY_ID = B.RESPONSIBILITY_ID
+					   AND B.RESPONSIBILITY_ID = C.RESPONSIBILITY_ID
+					   AND SYSDATE BETWEEN B.BEGIN_DATE AND B.END_DATE
+					   AND C.ROLE_ID = D.ROLE_ID
+					   AND D.ROLE_ID = E.ROLE_ID)
+       CONNECT BY BASEMENU.MENU_NODE_ID  = PRIOR BASEMENU.PARENT_NODE_ID
+	</select>
+	
+	
+	<delete id="deleteNavigationById" parameterType="java.lang.String">  
+        DELETE FROM BASE.BASE_MENU_NODE WHERE MENU_NODE_ID = #{id}  
+    </delete>
+    
+    <delete id="deleteNavigationTlById" parameterType="java.lang.String">  
+        DELETE FROM BASE.BASE_MENU_NODE_TL WHERE MENU_NODE_ID = #{id}  
+    </delete>
+    
+    <select id="getAllFunctions"  resultMap="NavigationMap">
+		SELECT BASEMENU.MENU_NODE_ID,		       
+		       BASEMENU.MENU_NODE_NAME,
+		       BASEMENU.MENU_NODE_CODE,
+		       BASEMENU.PARENT_NODE_ID,
+		       BASEMENU.ORDER_NUM,
+		       BASEMENU.MENU_NODE_TYPE,
+		       BASEMENU.ORIGINAL_SOURCE,
+		       BASEMENU.URL,
+		       BASEMENU.ICON,
+		       BASEMENU.LAST_UPDATE_LOGIN,
+		       BASEMENU.LAST_UPDATED_BY,
+		       TO_CHAR(BASEMENU.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASEMENU.CREATED_BY,
+		       TO_CHAR(BASEMENU.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM BASE_MENU_NODE_VL BASEMENU
+	     WHERE BASEMENU.MENU_NODE_TYPE = 20
+	</select>
+	
+	 <select id="getAllFunctionsByResoure"  resultMap="NavigationMap">
+		SELECT BASEMENU.MENU_NODE_ID,		       
+		       BASEMENU.MENU_NODE_NAME,
+		       BASEMENU.MENU_NODE_CODE,
+		       BASEMENU.PARENT_NODE_ID,
+		       BASEMENU.ORDER_NUM,
+		       BASEMENU.MENU_NODE_TYPE,
+		       BASEMENU.ORIGINAL_SOURCE,
+		       BASEMENU.URL,
+		       BASEMENU.ICON,
+		       BASEMENU.LAST_UPDATE_LOGIN,
+		       BASEMENU.LAST_UPDATED_BY,
+		       TO_CHAR(BASEMENU.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASEMENU.CREATED_BY,
+		       TO_CHAR(BASEMENU.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM BASE_MENU_NODE_VL BASEMENU
+		  ORDER BY BASEMENU.PARENT_NODE_ID,BASEMENU.ORDER_NUM
+	</select>
+	
+</mapper>

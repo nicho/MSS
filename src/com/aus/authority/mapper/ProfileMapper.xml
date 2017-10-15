@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.aus.authority.dao.IProfileDao">
+
+	<resultMap id="ProfileMap" type="com.aus.authority.model.ProfileDto">
+		<id column="PROFILE_ID" property="profileId" jdbcType="VARCHAR" />
+		<result column="PROFILE_NAME" property="profileName" jdbcType="VARCHAR" />
+		<result column="PROFILE_CODE" property="profileCode" jdbcType="VARCHAR" />
+		<result column="PROFILE_DESC" property="profileDesc" jdbcType="VARCHAR" />
+		<result column="SOURCE_SQL" property="sourceSql" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="ProfileTlMap" type="com.aus.authority.model.ProfileTlDto">
+		<result column="PROFILE_ID" property="profileId" jdbcType="VARCHAR" />
+		<result column="PROFILE_NAME" property="profileName" jdbcType="VARCHAR" />
+		<result column="PROFILE_DESC" property="profileDesc" jdbcType="VARCHAR" />
+		<result column="LANGUAGE" property="language" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<select id="getAllProfile"  resultMap="ProfileMap" parameterType="com.aus.authority.model.ProfileDto">
+		SELECT BASEPROFILE.PROFILE_ID,		       
+		       BASEPROFILE.PROFILE_NAME,
+		       BASEPROFILE.PROFILE_CODE,
+		       BASEPROFILE.PROFILE_DESC,
+		       BASEPROFILE.SOURCE_SQL,          
+		       BASEPROFILE.LAST_UPDATE_LOGIN,
+		       BASEPROFILE.LAST_UPDATED_BY,
+		       TO_CHAR(BASEPROFILE.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASEPROFILE.CREATED_BY,
+		       TO_CHAR(BASEPROFILE.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM AUPORTAL.BASE_PROFILE_VL BASEPROFILE
+	     WHERE 1=1
+	     <if test="profileName != null and ''!= profileName">
+		 	  AND BASEPROFILE.PROFILE_NAME LIKE '%'|| #{profileName} ||'%' 
+	 	 </if>
+	 	 <if test="profileCode != null and ''!= profileCode">
+		 	  AND BASEPROFILE.PROFILE_CODE LIKE '%'|| #{profileCode} ||'%'
+	 	 </if>
+	 	 ORDER BY PROFILE_ID ASC
+	</select>
+	
+	<select id="getProfileById"  resultMap="ProfileMap" parameterType="java.lang.String">
+		SELECT BASEPROFILE.PROFILE_ID,		       
+		       BASEPROFILE.PROFILE_NAME,
+		       BASEPROFILE.PROFILE_CODE,
+		       BASEPROFILE.PROFILE_DESC,
+		       BASEPROFILE.SOURCE_SQL,          
+		       BASEPROFILE.LAST_UPDATE_LOGIN,
+		       BASEPROFILE.LAST_UPDATED_BY,
+		       TO_CHAR(BASEPROFILE.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASEPROFILE.CREATED_BY,
+		       TO_CHAR(BASEPROFILE.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM AUPORTAL.BASE_PROFILE_VL BASEPROFILE
+	     WHERE BASEPROFILE.PROFILE_ID = #{profileId}
+	</select>
+	
+	<select id="getProfileByCode"  resultMap="ProfileMap" parameterType="java.lang.String">
+		SELECT BASEPROFILE.PROFILE_ID,		       
+		       BASEPROFILE.PROFILE_NAME,
+		       BASEPROFILE.PROFILE_CODE,
+		       BASEPROFILE.PROFILE_DESC,
+		       BASEPROFILE.SOURCE_SQL,          
+		       BASEPROFILE.LAST_UPDATE_LOGIN,
+		       BASEPROFILE.LAST_UPDATED_BY,
+		       TO_CHAR(BASEPROFILE.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASEPROFILE.CREATED_BY,
+		       TO_CHAR(BASEPROFILE.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM AUPORTAL.BASE_PROFILE_VL BASEPROFILE
+	     WHERE BASEPROFILE.PROFILE_CODE = #{profileCode}
+	</select>
+	
+	<insert id="saveProfile" parameterType="com.aus.authority.model.ProfileDto">
+	    <selectKey resultType="java.lang.String" order="BEFORE" keyProperty="profileId">
+			SELECT BASE.BASE_PROFILE_S.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO BASE.BASE_PROFILE
+		  (
+		  <trim suffixOverrides=",">
+			   PROFILE_ID,
+			   <if test="profileCode != null and ''!= profileCode">
+			 	  PROFILE_CODE,
+		 	   </if>
+		 	   <if test="sourceSql != null and ''!= sourceSql">
+			 	  SOURCE_SQL,
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN,
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY,
+		 	   </if>
+			   LAST_UPDATE_DATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY,
+		 	   </if>
+			   CREATION_DATE,		  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			   #{profileId},
+			   <if test="profileCode != null and ''!= profileCode">
+			 	  #{profileCode},
+		 	   </if>
+		 	   <if test="sourceSql != null and ''!= sourceSql">
+			 	  #{sourceSql},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  #{lastUpdatedBy},
+		 	   </if>
+			   SYSDATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  #{createdBy},
+		 	   </if>
+			   SYSDATE,
+		   </trim>
+		  )	
+	</insert>
+	
+	<insert id="saveProfileInfoByCurLang" parameterType="com.aus.authority.model.ProfileTlDto">
+		INSERT INTO BASE.BASE_PROFILE_TL
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="profileId != null and ''!= profileId">
+			 	  PROFILE_ID,
+		 	   </if>
+			   <if test="profileName != null and ''!= profileName">
+			 	  PROFILE_NAME,
+		 	   </if>
+		 	   <if test="profileDesc != null and ''!= profileDesc">
+			 	  PROFILE_DESC,
+		 	   </if>
+		 	   <if test="language != null and ''!= language">
+			 	  LANGUAGE,
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN,
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY,
+		 	   </if>
+			   LAST_UPDATE_DATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY,
+		 	   </if>
+			   CREATION_DATE,		  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="profileId != null and ''!= profileId">
+			 	  #{profileId},
+		 	   </if>
+			   <if test="profileName != null and ''!= profileName">
+			 	  #{profileName},
+		 	   </if>
+		 	   <if test="profileDesc != null and ''!= profileDesc">
+			 	  #{profileDesc},
+		 	   </if>
+		 	   <if test="language != null and ''!= language">
+			 	  #{language},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  #{lastUpdatedBy},
+		 	   </if>
+			   SYSDATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  #{createdBy},
+		 	   </if>
+			   SYSDATE,
+		   </trim>
+		  )	
+	</insert>
+	
+	<update id="updateProfile" parameterType="com.aus.authority.model.ProfileDto">
+		UPDATE BASE.BASE_PROFILE A
+		   SET 
+		   <trim suffixOverrides=",">	   		       
+		       <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  A.LAST_UPDATE_LOGIN = #{lastUpdateLogin}, 
+		 	   </if>
+		 	   <if test="sourceSql != null and ''!= sourceSql">
+			 	  A.SOURCE_SQL = #{sourceSql}, 
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  A.LAST_UPDATED_BY = #{lastUpdatedBy},
+		 	   </if>
+		 	   LAST_UPDATE_DATE = SYSDATE
+		   </trim>
+		 WHERE A.PROFILE_ID = #{profileId}
+	</update>
+	
+	<update id="updateProfileInfoByCurLang" parameterType="com.aus.authority.model.ProfileTlDto">
+		UPDATE BASE.BASE_PROFILE_TL A
+		   SET 
+		   <trim suffixOverrides=",">	   
+		   	   <if test="profileName != null and ''!= profileName">
+			 	  PROFILE_NAME = #{profileName},
+		 	   </if>
+		 	   <if test="profileDesc != null and ''!= profileDesc">
+			 	  PROFILE_DESC = #{profileDesc},
+		 	   </if>	       
+		       <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  A.LAST_UPDATE_LOGIN = #{lastUpdateLogin}, 
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  A.LAST_UPDATED_BY = #{lastUpdatedBy},
+		 	   </if>
+		 	   LAST_UPDATE_DATE = SYSDATE
+		   </trim>
+		 WHERE A.PROFILE_ID = #{profileId}
+		   AND A.LANGUAGE = USERENV('LANG')
+	</update>
+	
+</mapper>

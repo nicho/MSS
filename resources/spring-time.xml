@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<beans xmlns="http://www.springframework.org/schema/beans" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xmlns:aop="http://www.springframework.org/schema/aop" 
+    xmlns:tx="http://www.springframework.org/schema/tx" 
+    xmlns:context="http://www.springframework.org/schema/context" 
+    xmlns:task="http://www.springframework.org/schema/task" 
+    xsi:schemaLocation=" 
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd 
+http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd 
+http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd 
+http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.2.xsd 
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd"
+default-autowire="byName" default-lazy-init="false">
+	
+	<task:scheduled-tasks> 
+		<!--  秒，分，时，天，月，年 -->
+		<!-- 0/10 * * * * ?" 每10秒触发   , 0 15 10 * * ? *" 每天上午10:15触发  "0 0 12 * * ?" 每天12点触发   -->
+   		<task:scheduled ref="winxinUserInvalidTask" method="invalidUserBeforeDay" cron="0 0 1 * * ?"/>
+   		
+   		<task:scheduled ref="syncResumeTaskService" method="syncResume" cron="0 0 1 * * ?"/>
+   		
+   		<!-- task:scheduled ref="winxinUserInvalidTask" method="invalidUserBeforeDay" cron="0/10 * * * * ?"/  -->
+	</task:scheduled-tasks>
+   
+</beans>
+

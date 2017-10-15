@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.aus.common.dao.ProcessCodeSubClassDao">
+	<resultMap id="FlexValueMap" type="com.aus.common.model.FlexValueDto">
+		<result column="FLEX_VALUE" property="flexValue" jdbcType="VARCHAR" />
+		<result column="FLEX_VALUES_DESC" property="flexValuesDesc" jdbcType="VARCHAR" /> 
+		<result column="description" property="description" jdbcType="VARCHAR" /> 
+	</resultMap>
+	<select id="getAllProcessCodeSubClassList" resultType="com.aus.common.model.ProcessCodeSubClass"
+		parameterType="com.aus.common.model.ProcessCodeSubClass">
+		SELECT * FROM (SELECT A.Process_Subclass_Id
+		,A.Process_Subclass_Code,A.Process_Subclass_Name,A.Process_Class_Code,to_char(A.ORG_ID) AS ORG_ID,'20' as process_type
+		FROM APPS.CUX_PROCSS_CODE_SUBCLASS A
+		WHERE A.IS_DELETE='0'
+		UNION SELECT B.PROCESS_CLASS_ID as Process_Subclass_Id
+		,B.PROCESS_CLASS_CODE as Process_Subclass_Code , B.PROCESS_CLASS_NAME
+		as Process_Subclass_Name,'0' as Process_Class_Code,#{org_id} as ORG_ID,'10' as process_type FROM
+		APPS.CUX_PROCSS_CODE_CLASS B) per
+		WHERE 1=1
+		<if test="process_class_code != null and '' != process_class_code">
+			AND per.PROCESS_CLASS_CODE = #{process_class_code}
+		</if>
+		<if test="process_subclass_code != null and '' != process_subclass_code">
+			AND per.PROCESS_SUBCLASS_CODE = #{process_subclass_code}
+		</if>
+		<if test="org_id != null and '' != org_id">
+			AND per.ORG_ID = #{org_id}
+		</if>
+		ORDER BY per.PROCESS_CLASS_CODE DESC,per.PROCESS_SUBCLASS_CODE DESC
+	</select>
+	
+	<select id="getAllProcessCodeSubClassListNoPar" resultType="com.aus.common.model.ProcessCodeSubClass"
+		parameterType="com.aus.common.model.ProcessCodeSubClass">
+		SELECT * FROM (SELECT A.Process_Subclass_Id
+		,A.Process_Subclass_Code,A.Process_Subclass_Name,A.Process_Class_Code,A.ORG_ID
+		FROM APPS.CUX_PROCSS_CODE_SUBCLASS A
+		WHERE A.IS_DELETE='0') per
+		WHERE 1=1
+		<if test="process_class_code != null and '' != process_class_code">
+			AND per.PROCESS_CLASS_CODE = #{process_class_code}
+		</if>
+		<if test="process_subclass_code != null and '' != process_subclass_code">
+			AND per.PROCESS_SUBCLASS_CODE = #{process_subclass_code}
+		</if>
+		<if test="org_id != null and '' != org_id">
+			AND per.ORG_ID = #{org_id}
+		</if>
+		ORDER BY per.PROCESS_CLASS_CODE DESC,per.PROCESS_SUBCLASS_CODE DESC
+	</select>
+  
+  
+  <insert id="addProcessCodeSubClass" parameterType="com.aus.common.model.ProcessCodeSubClass" >
+    <selectKey resultType="java.lang.String" order="BEFORE" keyProperty="process_subclass_id" >
+	SELECT APPS.CUX_PROCSS_CODE_SUBCLASS_S.NEXTVAL FROM DUAL
+	</selectKey>	
+    insert into  APPS.CUX_PROCSS_CODE_SUBCLASS (
+    <trim suffixOverrides=",">
+			   PROCESS_SUBCLASS_ID,PROCESS_SUBCLASS_CODE,PROCESS_SUBCLASS_NAME,
+		 	   PROCESS_CLASS_CODE,
+		 	   IS_DELETE,
+			 	  CREATION_BY,
+			 	  LAST_UPDATE_BY,
+			 	  LAST_UPDATE_DATE,
+		 	      CREATION_DATE,
+		 	      ORG_ID
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			    #{process_subclass_id,jdbcType=NUMERIC},#{process_subclass_code,jdbcType=VARCHAR},#{process_subclass_name,jdbcType=VARCHAR},
+			    #{process_class_code,jdbcType=VARCHAR},
+			     '0',
+			 	  #{creation_by,jdbcType=VARCHAR},
+			 	  #{last_update_by,jdbcType=VARCHAR},
+			 	  SYSDATE,
+		 	   	  SYSDATE,
+		 	   	  #{org_id,jdbcType=NUMERIC}
+		   </trim>
+		  )	
+  </insert>
+  
+ <update id="updateProcessCodeSubClass" parameterType="com.aus.common.model.ProcessCodeSubClass">
+		UPDATE  APPS.CUX_PROCSS_CODE_SUBCLASS A 
+		SET 
+		<if test="process_subclass_code != null and ''!= process_subclass_code"  >
+        A.PROCESS_SUBCLASS_CODE = #{process_subclass_code,jdbcType=VARCHAR},
+       </if>
+       <if test="process_subclass_name != null and ''!= process_subclass_name"  >
+        A.PROCESS_SUBCLASS_NAME = #{process_subclass_name,jdbcType=VARCHAR},
+       </if>
+        <if test="process_class_code != null and ''!= process_class_code"  >
+        A.PROCESS_CLASS_CODE = #{process_class_code,jdbcType=VARCHAR},
+       </if>
+		A.LAST_UPDATE_BY = #{last_update_by,jdbcType=NUMERIC},
+        A.LAST_UPDATE_DATE =sysdate
+        WHERE A.PROCESS_SUBCLASS_ID = #{process_subclass_id,jdbcType=NUMERIC} 
+	</update>
+	
+	 <update id="deleteByIds" flushCache="true" >
+       UPDATE APPS.CUX_PROCSS_CODE_SUBCLASS SET IS_DELETE='1',LAST_UPDATE_DATE=sysdate WHERE PROCESS_SUBCLASS_ID IN   
+    <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+	#{item}   
+    </foreach>       
+  </update>
+  <update id="updateSubClassRepeatData" flushCache="true" parameterType="java.lang.String">
+  UPDATE APPS.CUX_PROCSS_CODE_SUBCLASS d set d.is_delete='1'  Where d.is_delete='0' and d.org_id=#{orgId} and d.process_subclass_id Not In (Select Max(A.PROCESS_SUBCLASS_ID) From APPS.CUX_PROCSS_CODE_SUBCLASS  a where a.is_delete='0' and a.org_id=#{orgId} Group By a.process_class_code,a.Process_Subclass_Code)
+	</update>
+  
+  <select id="getFlowTypeFlexValue" resultMap="FlexValueMap" parameterType="java.lang.String">
+		SELECT FV.FLEX_VALUE ,FV.FLEX_VALUES_DESC 
+		  FROM AUPORTAL.BASE_FLEX_VALUE_V FV
+		  WHERE FV.FLEX_VALUE_SET_NAME = #{type}
+		  AND  FV.FLEX_VALUE = #{flex_value}
+	</select>
+   <select id="getAllProcessCodeClass" resultType="com.aus.common.model.ProcessCodeClass">
+		select * from APPS.CUX_PROCSS_CODE_CLASS t
+	</select>
+</mapper>

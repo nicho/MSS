@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.aus.common.dao.CuxProcessCodeOperateDao">
+ <resultMap id="PersonMap" type="com.aus.common.model.PersonDto">
+		<result column="USER_ID" property="userId" jdbcType="VARCHAR" />
+		<result column="USER_ACCOUNT" property="userAccount" jdbcType="VARCHAR" />
+		<result column="USER_NAME" property="userName" jdbcType="VARCHAR" />
+		<result column="DEPARTMENT_CODE" property="departmentCode" jdbcType="VARCHAR" />
+		<result column="DEPARTMENT_NAME" property="departmentName" jdbcType="VARCHAR" />
+		<result column="ORG_ID" property="orgId" jdbcType="VARCHAR" />
+		<result column="CHANNEL_TYPE" property="channelType" jdbcType="VARCHAR" />
+		<result column="CHANNEL_NAME" property="channelName" jdbcType="VARCHAR" />
+		<result column="PERSON_ID" property="personId" jdbcType="VARCHAR" />
+		<result column="ORG_NAME" property="orgName" jdbcType="VARCHAR" />
+		<result column="POSITION_ID" property="positionId" jdbcType="VARCHAR" />
+		<result column="POSITION_NAME" property="positionName" jdbcType="VARCHAR" />
+		<result column="PROVINCE" property="province" jdbcType="VARCHAR" />
+		<result column="BUDGET_PRIVILEGE" property="budgetPrivilege" jdbcType="VARCHAR" />
+		<result column="PRIMARY_FLAG" property="primaryFlag" jdbcType="VARCHAR" />
+		<result column="JOB_ID" property="jobId" jdbcType="VARCHAR" />
+		<result column="EMAIL_ADDRESS" property="emailAddress" jdbcType="VARCHAR" />
+		<result column="sex" property="sex" jdbcType="VARCHAR" />
+		<result column="MOBILE_PHONE" property="mobilePhone" jdbcType="VARCHAR" />
+		<result column="service_start_dateStr" property="service_start_dateStr" jdbcType="VARCHAR" />
+		<result column="hight_edu" property="hight_edu" jdbcType="VARCHAR" />
+		<result column="age" property="age" jdbcType="VARCHAR" />
+		<result column="sexName" property="sexName" jdbcType="VARCHAR" />
+		<result column="home_adress" property="home_adress" jdbcType="VARCHAR" />
+		<result column="id_card_num" property="id_card_num" jdbcType="VARCHAR" />
+		<result column="try_salary_level" property="try_salary_level" jdbcType="VARCHAR" />
+	</resultMap> 
+  <insert id="addCuxProcessCodeOperate" parameterType="com.aus.common.model.CuxProcessCodeOperate" >
+    <selectKey resultType="java.lang.String" order="BEFORE" keyProperty="process_id" >
+	SELECT APPS.CUX_PROCESS_CODE_OPERATE_ID_S.NEXTVAL FROM DUAL
+	</selectKey>	
+    insert into  APPS.CUX_PROCESS_CODE_OPERATE(
+    <trim suffixOverrides=",">
+			   PROCESS_ID,PROCESS_CODE,CILENT_USER_ID,BE_CLIENT_USER_ID,
+		 	   BEGIN_DATE,
+		 	   END_DATE,
+			 	  CREATION_BY,
+			 	  LAST_UPDATE_BY,
+			 	  LAST_UPDATE_DATE,
+		 	      CREATION_DATE,
+		 	      LAST_UPDATE_LOGIN,
+		 	      IS_DELETE,OU_ORGANIZATION_ID,CILENT_PERSON_ID,BE_CLIENT_PERSON_ID,BE_USER_ACCOUNT,USER_ACCOUNT
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			    #{process_id,jdbcType=NUMERIC},#{process_code},#{cilent_user_id,jdbcType=NUMERIC},
+			    #{be_client_user_id,jdbcType=NUMERIC},#{begin_date,jdbcType=TIMESTAMP},#{end_date,jdbcType=TIMESTAMP},
+			 	  #{creation_by},
+			 	  #{last_update_by},
+			 	  SYSDATE,
+		 	   	  SYSDATE,#{last_update_login},'0',#{ou_organization_id,jdbcType=NUMERIC},#{cilent_person_id,jdbcType=NUMERIC},#{be_client_person_id,jdbcType=NUMERIC},
+		 	   	  #{be_user_account},#{user_account}
+		   </trim>
+		  )	
+  </insert>
+   <update id="updateCuxProcessCodeOperate" parameterType="com.aus.common.model.CuxProcessCodeOperate">
+		UPDATE  APPS.CUX_PROCESS_CODE_OPERATE A 
+		SET 
+		<if test="process_code != null and ''!= process_code"  >
+        A.PROCESS_CODE = #{process_code,jdbcType=VARCHAR},
+       </if>
+       <if test="cilent_user_id != null and ''!= cilent_user_id"  >
+        A.CILENT_USER_ID = #{cilent_user_id,jdbcType=VARCHAR},
+       </if>
+        <if test="be_client_user_id != null and ''!= be_client_user_id"  >
+        A.BE_CLIENT_USER_ID = #{be_client_user_id,jdbcType=VARCHAR},
+       </if>
+        <if test="be_client_person_id != null and ''!= be_client_person_id"  >
+        A.BE_CLIENT_PERSON_ID = #{be_client_person_id,jdbcType=VARCHAR},
+       </if>
+        <if test="be_user_account != null and ''!= be_user_account"  >
+        A.BE_USER_ACCOUNT = #{be_user_account,jdbcType=VARCHAR},
+       </if>
+       <if test="begin_date != null and ''!= begin_date"  >
+        A.BEGIN_DATE = #{begin_date,jdbcType=TIMESTAMP},
+       </if>
+        <if test="end_date != null and ''!= end_date"  >
+        A.END_DATE = #{end_date,jdbcType=TIMESTAMP},
+       </if>
+		A.LAST_UPDATE_BY = #{last_update_by,jdbcType=NUMERIC},
+        A.LAST_UPDATE_DATE =sysdate
+        WHERE A.PROCESS_ID = #{process_id,jdbcType=NUMERIC} 
+	</update>
+	
+	 <update id="deleteByIds" flushCache="true" >
+       UPDATE APPS.CUX_PROCESS_CODE_OPERATE SET IS_DELETE='1',LAST_UPDATE_DATE=sysdate WHERE PROCESS_ID IN   
+    <foreach collection="array" index="index" item="item" open="(" separator="," close=")">   
+        #{item}   
+    </foreach>       
+  </update>
+  <select id="getAllCuxProcessCodeOperate" resultType="com.aus.common.model.CuxProcessCodeOperate" parameterType="com.aus.common.model.CuxProcessCodeOperate" >
+    SELECT * FROM (SELECT A.PROCESS_ID,A.Process_Code,A.OU_ORGANIZATION_ID,A.CREATION_BY,A.BEGIN_DATE,A.END_DATE,A.CILENT_PERSON_ID,
+     (SELECT PAP.LAST_NAME 
+      FROM HR.PER_ALL_PEOPLE_F PAP,BASE.BASE_USER u
+      WHERE PAP.PERSON_ID = u.person_id
+      and  u.user_id = a.cilent_user_id
+       AND SYSDATE BETWEEN PAP.EFFECTIVE_START_DATE 
+           AND NVL(PAP.EFFECTIVE_END_DATE, TO_DATE('3000', 'YYYY'))
+		  )  as client_user_name, 
+      
+      (SELECT PAP.LAST_NAME 
+      FROM HR.PER_ALL_PEOPLE_F PAP,BASE.BASE_USER u
+      WHERE PAP.PERSON_ID = u.person_id
+      and  u.user_id = a.be_client_user_id
+       AND SYSDATE BETWEEN PAP.EFFECTIVE_START_DATE 
+           AND NVL(PAP.EFFECTIVE_END_DATE, TO_DATE('3000', 'YYYY'))
+		  ) as be_client_user_name, 
+      
+      (
+      SELECT FV.FLEX_VALUES_DESC
+      FROM AUPORTAL.BASE_FLEX_VALUE_V FV
+     WHERE FV.FLEX_VALUE_SET_NAME = 'CUX_PROCESS_TYPE'
+     AND FV.FLEX_VALUE = a.process_code
+      ) as process_name,
+      TO_CHAR(A.Begin_Date, 'yyyy-MM-dd') as begin_date_str,
+      TO_CHAR(A.END_Date, 'yyyy-MM-dd') as end_date_str
+  FROM APPS.CUX_PROCESS_CODE_OPERATE A 
+  WHERE A.IS_DELETE='0'
+  AND A.Cilent_User_Id = #{user_id}
+  UNION
+  
+  SELECT A.PROCESS_ID,A.Process_Code,A.OU_ORGANIZATION_ID,A.CREATION_BY,A.BEGIN_DATE,A.END_DATE,A.CILENT_PERSON_ID,
+ 
+     (SELECT PAP.LAST_NAME 
+      FROM HR.PER_ALL_PEOPLE_F PAP,BASE.BASE_USER u
+      WHERE PAP.PERSON_ID = u.person_id
+      and  u.user_id = a.cilent_user_id
+       AND SYSDATE BETWEEN PAP.EFFECTIVE_START_DATE 
+           AND NVL(PAP.EFFECTIVE_END_DATE, TO_DATE('3000', 'YYYY'))
+		  )  as client_user_name, 
+      
+      (SELECT PAP.LAST_NAME 
+      FROM HR.PER_ALL_PEOPLE_F PAP,BASE.BASE_USER u
+      WHERE PAP.PERSON_ID = u.person_id
+      and  u.user_id = a.be_client_user_id
+       AND SYSDATE BETWEEN PAP.EFFECTIVE_START_DATE 
+           AND NVL(PAP.EFFECTIVE_END_DATE, TO_DATE('3000', 'YYYY'))
+		  ) as be_client_user_name, 
+      
+      (
+      SELECT FV.FLEX_VALUES_DESC
+      FROM AUPORTAL.BASE_FLEX_VALUE_V FV
+     WHERE FV.FLEX_VALUE_SET_NAME = 'CUX_PROCESS_TYPE'
+     AND FV.FLEX_VALUE = a.process_code
+      ) as process_name,
+      TO_CHAR(A.Begin_Date ,'yyyy-MM-dd') as begin_date_str,
+      TO_CHAR(A.END_Date ,'yyyy-MM-dd') as end_date_str
+  FROM APPS.CUX_PROCESS_CODE_OPERATE A ,BASE.BASE_USER U
+  WHERE A.IS_DELETE='0'
+  AND U.USER_ID = A.CILENT_USER_ID
+  AND U.PERSON_ID IN (
+  SELECT
+  CAB.SUBORDINATE_PERSON_ID
+			FROM APPS.CUX_CDM_ACCESS_BASEDATA CAB
+			WHERE
+			CAB.ACCESS_TYPE = '1'
+			AND CAB.ORG_ID = #{ou_organization_id}
+			AND CAB.OA_USER_ID =
+			#{user_id}
+  )) DD WHERE DD.OU_ORGANIZATION_ID = #{ou_organization_id}
+       
+       <if test="begin_date_str != null and ''!= begin_date_str"  >
+         <![CDATA[  AND DD.BEGIN_DATE  >= to_date(#{begin_date_str},'yyyy-mm-dd')]]>
+       </if>
+     <if test="end_date_str != null and ''!= end_date_str"  >
+         <![CDATA[  AND DD.END_DATE  < to_date(#{end_date_str},'yyyy-mm-dd') +1]]>
+      </if>
+   <if test="process_code != null and ''!= process_code"  >
+          AND  DD.PROCESS_CODE = #{process_code}
+   </if>
+   <if test="cilent_person_id != null and ''!= cilent_person_id"  >
+          AND  DD.CILENT_PERSON_ID = #{cilent_person_id}
+   </if>
+   <if test="process_id != null and ''!= process_id"  >
+          AND  DD.PROCESS_ID = #{process_id}
+   </if>
+  </select>
+  <select id="getAllBeCuxProcessCodeOperate" resultType="com.aus.common.model.CuxProcessCodeOperate" parameterType="com.aus.common.model.CuxProcessCodeOperate" >
+    SELECT * FROM (SELECT A.PROCESS_ID,A.Process_Code,A.OU_ORGANIZATION_ID,A.CREATION_BY,A.BEGIN_DATE,A.END_DATE,A.CILENT_PERSON_ID,
+     (SELECT PAP.LAST_NAME 
+      FROM HR.PER_ALL_PEOPLE_F PAP,BASE.BASE_USER u
+      WHERE PAP.PERSON_ID = u.person_id
+      and  u.user_id = a.cilent_user_id
+       AND SYSDATE BETWEEN PAP.EFFECTIVE_START_DATE 
+           AND NVL(PAP.EFFECTIVE_END_DATE, TO_DATE('3000', 'YYYY'))
+		  )  as client_user_name, 
+      
+      (SELECT PAP.LAST_NAME 
+      FROM HR.PER_ALL_PEOPLE_F PAP,BASE.BASE_USER u
+      WHERE PAP.PERSON_ID = u.person_id
+      and  u.user_id = a.be_client_user_id
+       AND SYSDATE BETWEEN PAP.EFFECTIVE_START_DATE 
+           AND NVL(PAP.EFFECTIVE_END_DATE, TO_DATE('3000', 'YYYY'))
+		  ) as be_client_user_name, 
+      
+      (
+      SELECT FV.FLEX_VALUES_DESC
+      FROM AUPORTAL.BASE_FLEX_VALUE_V FV
+     WHERE FV.FLEX_VALUE_SET_NAME = 'CUX_PROCESS_TYPE'
+     AND FV.FLEX_VALUE = a.process_code
+      ) as process_name,
+      TO_CHAR(A.Begin_Date, 'yyyy-MM-dd') as begin_date_str,
+      TO_CHAR(A.END_Date, 'yyyy-MM-dd') as end_date_str
+  FROM APPS.CUX_PROCESS_CODE_OPERATE A 
+  WHERE A.IS_DELETE='0'
+  AND A.BE_Client_User_Id = #{user_id}) DD
+  WHERE DD.OU_ORGANIZATION_ID = #{ou_organization_id}  
+       <if test="begin_date_str != null and ''!= begin_date_str"  >
+         <![CDATA[  AND DD.BEGIN_DATE  >= to_date(#{begin_date_str},'yyyy-mm-dd')]]>
+       </if>
+     <if test="end_date_str != null and ''!= end_date_str"  >
+         <![CDATA[  AND DD.END_DATE  < to_date(#{end_date_str},'yyyy-mm-dd') +1]]>
+      </if>
+   <if test="process_code != null and ''!= process_code"  >
+          AND  DD.PROCESS_CODE = #{process_code}
+   </if>
+   <if test="cilent_person_id != null and ''!= cilent_person_id"  >
+          AND  DD.CILENT_PERSON_ID = #{cilent_person_id}
+   </if>
+   <if test="process_id != null and ''!= process_id"  >
+          AND  DD.PROCESS_ID = #{process_id}
+   </if>
+  </select>
+  
+  
+  <select id="findCuxProcessCodeOperate"  resultType="com.aus.common.model.CuxProcessCodeOperate" parameterType="com.aus.common.model.CuxProcessCodeOperate">
+  SELECT A.PROCESS_ID,A.Process_Code,A.cilent_user_id,A.cilent_person_id,A.be_client_user_id,A.be_user_account,A.be_client_person_id,be_user_account,
+     (SELECT PAP.LAST_NAME 
+      FROM HR.PER_ALL_PEOPLE_F PAP,BASE.BASE_USER u
+      WHERE PAP.PERSON_ID = u.person_id
+      and  u.user_id = a.cilent_user_id
+       AND SYSDATE BETWEEN PAP.EFFECTIVE_START_DATE 
+           AND NVL(PAP.EFFECTIVE_END_DATE, TO_DATE('3000', 'YYYY'))
+		  )  as client_user_name, 
+      
+      (SELECT PAP.LAST_NAME 
+      FROM HR.PER_ALL_PEOPLE_F PAP,BASE.BASE_USER u
+      WHERE PAP.PERSON_ID = u.person_id
+      and  u.user_id = a.be_client_user_id
+       AND SYSDATE BETWEEN PAP.EFFECTIVE_START_DATE 
+           AND NVL(PAP.EFFECTIVE_END_DATE, TO_DATE('3000', 'YYYY'))
+		  ) as be_client_user_name, 
+      
+      (
+      SELECT FV.FLEX_VALUES_DESC
+      FROM AUPORTAL.BASE_FLEX_VALUE_V FV
+     WHERE FV.FLEX_VALUE_SET_NAME = 'CUX_PROCESS_TYPE'
+     AND FV.FLEX_VALUE = a.process_code
+      ) as process_name,
+      TO_CHAR(A.Begin_Date, 'yyyy-MM-dd') as begin_date_str,
+      TO_CHAR(A.END_Date, 'yyyy-MM-dd') as end_date_str
+  FROM APPS.CUX_PROCESS_CODE_OPERATE A 
+  WHERE A.IS_DELETE='0'
+  AND A.PROCESS_ID = #{process_id}
+  </select>
+    <select id="getUserIdByPersonId"  resultMap="PersonMap" parameterType="java.lang.String">
+    select a.user_id from base.base_user a where a.person_id=#{personId,jdbcType=VARCHAR}
+    and sysdate between a.begin_date and a.end_date
+    </select>
+    
+    
+</mapper>

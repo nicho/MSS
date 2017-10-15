@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.aus.authority.dao.IAuthorityDao">
+
+	<resultMap id="NavigationMap" type="com.aus.authority.model.NavigationDto">
+		<id column="MENU_NODE_ID" property="menuNodeId" jdbcType="VARCHAR" />
+		<result column="MENU_NODE_NAME" property="menuNodeName" jdbcType="VARCHAR" />
+		<result column="MENU_NODE_CODE" property="menuNodeCode" jdbcType="VARCHAR" />
+		<result column="PARENT_NODE_ID" property="parentNodeId" jdbcType="VARCHAR" />
+		<result column="ORDER_NUM" property="orderNum" jdbcType="VARCHAR" />
+		<result column="MENU_NODE_TYPE" property="menuNodeType" jdbcType="VARCHAR" />
+		<result column="ORIGINAL_SOURCE" property="OriginalSource" jdbcType="VARCHAR" />
+		<result column="URL" property="url" jdbcType="VARCHAR" />
+		<result column="ICON" property="icon" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="ResponsiblityMap" type="com.aus.authority.model.ResponsibilityDto">
+		<id column="RESPONSIBILITY_ID" property="responsibilityId" jdbcType="VARCHAR" />
+		<result column="RESPONSIBILITY_CODE" property="responsibilityCode" jdbcType="VARCHAR" />
+		<result column="RESPONSIBILITY_NAME" property="responsibilityName" jdbcType="VARCHAR" />
+		<result column="RESPONSIBILITY_DESC" property="responsibilityDesc" jdbcType="VARCHAR" />
+		<result column="BEGIN_DATE" property="beginDate" jdbcType="VARCHAR" />
+		<result column="END_DATE" property="endDate" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<select id="findLogonNavigationTrees"  resultMap="NavigationMap" parameterType="java.lang.String">
+		SELECT DISTINCT  
+		   BASEMENU.MENU_NODE_ID,           
+           BASEMENU.MENU_NODE_NAME,
+           BASEMENU.MENU_NODE_CODE,
+           BASEMENU.PARENT_NODE_ID,
+           BASEMENU.ORDER_NUM,
+           BASEMENU.MENU_NODE_TYPE,
+           BASEMENU.ORIGINAL_SOURCE,
+           BASEMENU.URL,
+           BASEMENU.ICON,
+           BASEMENU.LAST_UPDATE_LOGIN,
+           BASEMENU.LAST_UPDATED_BY,
+           TO_CHAR(BASEMENU.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+           BASEMENU.CREATED_BY,
+		   TO_CHAR(BASEMENU.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM BASE_MENU_NODE_VL BASEMENU
+		  WHERE BASEMENU.ORIGINAL_SOURCE = 1
+		     START WITH BASEMENU.MENU_NODE_ID IN 
+		           (SELECT DISTINCT E.MENU_NODE_ID
+					  FROM BASE.BASE_RESPONSIBILITY_USER A,
+					       BASE.BASE_RESPONSIBILITY      B,
+					       BASE.BASE_RESPONSIBILITY_ROLE C,
+					       BASE.BASE_ROLE                D,
+					       BASE.BASE_ROLE_FUNCTION       E
+					 WHERE A.USER_ID = #{userId}
+					   AND A.RESPONSIBILITY_ID = B.RESPONSIBILITY_ID
+					   AND B.RESPONSIBILITY_ID = C.RESPONSIBILITY_ID
+					    <![CDATA[
+				 	   AND TO_CHAR(B.BEGIN_DATE,'YYYY-MM-DD') <= TO_CHAR(SYSDATE,'YYYY-MM-DD')
+				 	   ]]>
+				 	   AND TO_CHAR(B.END_DATE,'YYYY-MM-DD') >= TO_CHAR(SYSDATE,'YYYY-MM-DD')
+					   AND C.ROLE_ID = D.ROLE_ID
+					   AND D.ROLE_ID = E.ROLE_ID)
+       CONNECT BY BASEMENU.MENU_NODE_ID  = PRIOR BASEMENU.PARENT_NODE_ID
+         ORDER SIBLINGS BY BASEMENU.PARENT_NODE_ID,BASEMENU.ORDER_NUM
+	</select>
+	
+	<select id="isCanOperateResource"  resultType="java.lang.Integer">
+		SELECT COUNT(DISTINCT F.RESOURCE_CODE) FROM BASE.BASE_MENU_NODE A,
+                        BASE.BASE_ROLE_FUNCTION B,
+                        BASE.BASE_ROLE_RESOURCE C,
+                        BASE.BASE_RESPONSIBILITY_ROLE D,
+                        BASE.BASE_RESPONSIBILITY_USER E,
+                        BASE.BASE_RESOURCE F,
+                        BASE_RESPONSIBILITY_VL G
+            WHERE A.URL = #{url}
+                AND A.MENU_NODE_ID = B.MENU_NODE_ID
+                AND B.ROLE_ID = C.ROLE_ID
+                AND C.ROLE_ID = D.ROLE_ID
+                AND D.RESPONSIBILITY_ID = E.RESPONSIBILITY_ID
+                AND C.RESOURCE_ID = F.RESOURCE_ID
+                AND E.USER_ID = #{userId}
+                AND F.RESOURCE_CODE = #{resourceCode}
+                AND F.MENU_NODE_ID = A.MENU_NODE_ID
+                AND D.RESPONSIBILITY_ID = G.RESPONSIBILITY_ID
+                <![CDATA[
+		 	    AND TO_CHAR(G.BEGIN_DATE,'YYYY-MM-DD') <= TO_CHAR(SYSDATE,'YYYY-MM-DD')
+		 	    ]]>
+		 	    AND TO_CHAR(G.END_DATE,'YYYY-MM-DD') >= TO_CHAR(SYSDATE,'YYYY-MM-DD')
+	</select>
+	
+	<select id="findProfileValList"  resultType="java.lang.String">
+	    SELECT DISTINCT E.PROFILE_VALUE
+		  FROM BASE.BASE_MENU_NODE           A,
+		       BASE.BASE_ROLE_FUNCTION       B,
+		       BASE.BASE_RESPONSIBILITY_ROLE C,
+		       BASE.BASE_RESPONSIBILITY_USER D,
+		       BASE.BASE_PROFILE_VALUE       E,
+		       BASE.BASE_PROFILE             F
+		 WHERE A.MENU_NODE_ID = B.MENU_NODE_ID
+		   AND B.ROLE_ID = C.RESPONSIBILITY_ID
+		   AND C.RESPONSIBILITY_ID = D.RESPONSIBILITY_ID
+		   AND D.RESPONSIBILITY_ID = E.RESPONSIBILITY_ID
+		   AND E.PROFILE_ID = F.PROFILE_ID
+		   AND A.URL = #{url}
+		   AND D.USER_ID = #{userId}
+		   AND F.PROFILE_CODE = UPPER(#{profileCode})
+	</select>
+	
+	<select id="findPrifileValFirst"  resultType="java.lang.String">
+	    SELECT E.PROFILE_VALUE
+		  FROM BASE.BASE_MENU_NODE           A,
+		       BASE.BASE_ROLE_FUNCTION       B,
+		       BASE.BASE_RESPONSIBILITY_ROLE C,
+		       BASE.BASE_RESPONSIBILITY_USER D,
+		       BASE.BASE_PROFILE_VALUE       E,
+		       BASE.BASE_PROFILE             F
+		 WHERE A.MENU_NODE_ID = B.MENU_NODE_ID
+		   AND B.ROLE_ID = C.RESPONSIBILITY_ID
+		   AND C.RESPONSIBILITY_ID = D.RESPONSIBILITY_ID
+		   AND D.RESPONSIBILITY_ID = E.RESPONSIBILITY_ID
+		   AND E.PROFILE_ID = F.PROFILE_ID
+		   AND A.URL = #{url}
+		   AND D.USER_ID = #{userId}
+		   AND F.PROFILE_CODE = UPPER(#{profileCode})
+		   AND ROWNUM =1
+	</select>
+	
+	
+	<select id="findUserRoles" resultType="java.lang.String" parameterType="java.lang.String">
+		SELECT DISTINCT TO_CHAR(B.ROLE_ID) 
+		  FROM 
+		  BASE.BASE_RESPONSIBILITY_USER A,
+          BASE.BASE_RESPONSIBILITY_ROLE B
+         WHERE A.USER_ID = #{userId}
+           AND A.RESPONSIBILITY_ID = B.RESPONSIBILITY_ID
+	</select>
+	
+	<select id="findUserResources" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT DISTINCT D.RESOURCE_CODE
+          FROM BASE.BASE_ROLE_RESOURCE       A,
+               BASE.BASE_RESPONSIBILITY_ROLE B,
+               BASE.BASE_RESPONSIBILITY_USER C,
+               BASE.BASE_RESOURCE            D,
+               BASE_RESPONSIBILITY_VL E
+         WHERE A.ROLE_ID = B.ROLE_ID
+           AND B.RESPONSIBILITY_ID = C.RESPONSIBILITY_ID
+           AND A.RESOURCE_ID = D.RESOURCE_ID
+           AND B.RESPONSIBILITY_ID = E.RESPONSIBILITY_ID
+            <![CDATA[
+	 	   AND TO_CHAR(E.BEGIN_DATE,'YYYY-MM-DD') <= TO_CHAR(SYSDATE,'YYYY-MM-DD')
+	 	   ]]>
+	 	   AND TO_CHAR(E.END_DATE,'YYYY-MM-DD') >= TO_CHAR(SYSDATE,'YYYY-MM-DD')
+           AND C.USER_ID = #{userId}
+           AND TRIM(C.RESPONSIBILITY_ID) = #{responsilityId}
+	</select>
+	
+	<select id="findUserResponsibilitys" resultMap="ResponsiblityMap" parameterType="java.lang.String">
+        SELECT DISTINCT 
+               B.RESPONSIBILITY_ID,
+               B.RESPONSIBILITY_CODE,
+               B.RESPONSIBILITY_NAME,
+               B.RESPONSIBILITY_DESC,
+               B.BEGIN_DATE,
+               B.END_DATE,
+               B.LAST_UPDATE_LOGIN,
+           	   B.LAST_UPDATED_BY,
+	           TO_CHAR(B.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+	           B.CREATED_BY,
+			   TO_CHAR(B.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+          FROM BASE.BASE_RESPONSIBILITY_USER A,
+          	   BASE_RESPONSIBILITY_VL B,
+          	   BASE.BASE_MENU_NODE C,
+          	   BASE.BASE_ROLE_FUNCTION D,
+          	   BASE.BASE_RESPONSIBILITY_ROLE E
+         WHERE A.RESPONSIBILITY_ID = B.RESPONSIBILITY_ID
+           AND C.MENU_NODE_ID = D.MENU_NODE_ID
+           AND D.ROLE_ID = E.ROLE_ID
+           AND A.RESPONSIBILITY_ID = E.RESPONSIBILITY_ID
+            <![CDATA[
+	 	   AND TO_CHAR(B.BEGIN_DATE,'YYYY-MM-DD') <= TO_CHAR(SYSDATE,'YYYY-MM-DD')
+	 	   ]]>
+	 	   AND TO_CHAR(B.END_DATE,'YYYY-MM-DD') >= TO_CHAR(SYSDATE,'YYYY-MM-DD')
+           AND C.URL = #{url}
+           AND A.USER_ID = #{userId}
+           ORDER BY B.RESPONSIBILITY_NAME ASC
+	</select>
+	
+	<select id="findPrifileValByResponsibility" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT A.PROFILE_VALUE
+		  FROM BASE.BASE_PROFILE_VALUE       A,
+		       BASE.BASE_PROFILE             B
+		 WHERE A.PROFILE_ID = B.PROFILE_ID
+		   AND A.RESPONSIBILITY_ID = #{responsibilityId}
+		   AND B.PROFILE_CODE = #{profileName}
+	</select>
+
+</mapper>

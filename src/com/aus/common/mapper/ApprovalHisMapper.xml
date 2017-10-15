@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.aus.common.dao.IApprovalHisDao">
+
+	<resultMap id="ApprovalHisMap" type="com.aus.common.model.ApprovalHisDto">
+		<result column="APPROVAL_DATE" property="approvalDate" jdbcType="VARCHAR" />
+		<result column="APPROVAL_USER_NAME" property="approvalUserName" jdbcType="VARCHAR" />
+		<result column="STATUS_NAME" property="statusName" jdbcType="VARCHAR" />
+		<result column="ACTION_NAME" property="actionName" jdbcType="VARCHAR" />
+		<result column="DOC_ID" property="docId" jdbcType="VARCHAR" />
+		<result column="NEXT_APPROVAL_USER_NAME" property="nextApprovalUserName" jdbcType="VARCHAR" />
+		<result column="APPROVAL_COMMENT" property="approvalComment" jdbcType="VARCHAR" />
+		<result column="PROCESS_CODE" property="processCode" jdbcType="VARCHAR" />
+		<result column="APPROVAL_HIST_ID" property="approvalHistId" jdbcType="VARCHAR" />
+		<result column="OPERATION_CODE" property="operationCode" jdbcType="VARCHAR" />
+		<result column="USER_ID" property="userId" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<select id="getApprovalHis" resultMap="ApprovalHisMap" parameterType="com.aus.common.model.ApprovalHisDto">
+		SELECT TO_CHAR(A.APPROVAL_DATE, 'YYYY-MM-DD HH24:MI:SS') APPROVAL_DATE,
+		       (CASE WHEN A.ATTRIBUTE1='Y' THEN A.APPROVAL_USER_NAME || '(代审)'  
+		       WHEN A.ATTRIBUTE1='X' THEN A.APPROVAL_USER_NAME || '(助审)'  
+		       ELSE A.APPROVAL_USER_NAME END) APPROVAL_USER_NAME,
+		       V.STATUS_NAME,
+		       APV.STATUS_NAME ACTION_NAME,
+		       A.DOC_ID,
+		       A.NEXT_APPROVAL_USER_NAME,
+		       A.APPROVAL_COMMENT,
+		       A.PROCESS_CODE,
+		       A.APPROVAL_HIST_ID,
+		       A.OPERATION_CODE
+		  FROM CUX.CUX_APPROVAL_HIST         A,
+		       APPS.CUX_ENCUMBRANCE_STATUS_V V,
+		       APPS.CUX_APPROVAL_PROCESS_V   APV
+		 WHERE A.APPROVAL_RESULT = V.ENCUMBRANCE_STATUS
+		   AND A.APPROVAL_ACTION = APV.ACTION_STATUS
+	 	   AND A.PROCESS_CODE = #{processCode}
+	 	   AND A.DOC_ID = #{docId}
+	 	   AND A.OPERATION_CODE = #{operationCode}
+	 	 ORDER BY A.APPROVAL_DATE 
+	</select>
+		<select id="getLastApprovalComments" resultMap="ApprovalHisMap" parameterType="com.aus.common.model.ApprovalHisDto">
+	 
+	   SELECT TEMP.APPROVAL_COMMENT FROM (select * from  (
+       select  a.approval_comment,max(a.approval_date) as approval_date
+  from CUX.CUX_APPROVAL_HIST A
+ WHERE A.APPROVAL_COMMENT IS NOT NULL
+   AND A.USER_ID = #{userId}
+   <if test="processCode != null and ''!= processCode">  
+      AND A.Process_Code =#{processCode,jdbcType=VARCHAR}
+   </if>
+   group by a.approval_comment  
+) d order by d.approval_date  desc) TEMP WHERE ROWNUM<![CDATA[<=50]]>
+	 
+	</select>
+	
+   <select id="getApprovalInst" resultType="com.aus.common.model.ApprovalInstDto" parameterType="com.aus.common.model.ApprovalHisDto">
+		 
+			    SELECT *
+			      FROM apps.CUX_ACT_APPROVAL_INST t
+			     WHERE T.ITEM_KEY = (SELECT MAX(A.ITEM_KEY)
+			                           FROM apps.CUX_ACT_APPROVAL_INST A
+			                          WHERE A.BILL_ID = #{docId}
+			                            AND A.PROCESS_CODE = #{processCode})
+			                            ORDER BY T.STEP
+			
+	</select>
+    <select id="getFirstApprovalPersonMobilePhone" resultType="java.lang.String" parameterType="java.lang.String"> 
+		  	 SELECT V.MOBILE_PHONE
+		     FROM BASE_HR_PERSON_V V
+		    WHERE V.PERSON_ID =
+		          (SELECT U.PERSON_ID
+		             FROM BASE_USER U
+		            WHERE U.USER_NAME =
+		                  (
+		                   
+		                   SELECT T.ACT_ROLE
+		                     FROM APPS.CUX_ACT_APPROVAL_INST T
+		                    WHERE T.ITEM_KEY =
+		                          (SELECT MAX(A.ITEM_KEY)
+		                             FROM APPS.CUX_ACT_APPROVAL_INST A
+		                            WHERE A.BILL_ID = #{docId}
+		                              AND A.PROCESS_CODE = #{processCode})
+		                      AND T.STEP = 1))
+		      AND ROWNUM = 1 
+	</select>
+	  
+</mapper>

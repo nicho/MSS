@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.aus.common.dao.RankDataDao" >
+  <resultMap id="BaseResultMap" type="com.aus.common.model.RankData" >
+    <id column="ID" property="id" jdbcType="VARCHAR" />
+    <result column="OU_ID" property="ouId" jdbcType="VARCHAR" />
+    <result column="RANK_TYPE" property="rankType" jdbcType="VARCHAR" />
+    <result column="BIZ_TYPE" property="bizType" jdbcType="VARCHAR" />
+    <result column="PERIOD_TYPE" property="periodType" jdbcType="VARCHAR" />
+    <result column="PERIOD_NAME" property="periodName" jdbcType="VARCHAR" />
+    <result column="OBJECT" property="object" jdbcType="VARCHAR" />
+    <result column="TERRITORY_LEVEL_ID" property="territoryLevelId" jdbcType="VARCHAR" />
+    <result column="TERRITORY_ID" property="territoryId" jdbcType="VARCHAR" />
+    <result column="POSITION_ID" property="positionId" jdbcType="VARCHAR" />
+    <result column="JOB_ID" property="jobId" jdbcType="VARCHAR" />
+    <result column="SYS_ACHIEVE_VALUE" property="sysAchieveValue" jdbcType="VARCHAR" />
+    <result column="SYS_ACIHEVE_UPDATA_DATE" property="sysAciheveUpdataDate" jdbcType="VARCHAR" />
+    <result column="ADJUST_VALUE" property="adjustValue" jdbcType="VARCHAR" />
+    <result column="ADJUST_UPDATA_DATE" property="adjustUpdataDate" jdbcType="VARCHAR" />
+    <result column="TASK_VALUE" property="taskValue" jdbcType="VARCHAR" />
+    <result column="TASK_UNIT" property="taskUnit" jdbcType="VARCHAR" />
+    <result column="ACIHEVE_RATE" property="aciheveRate" jdbcType="VARCHAR" />
+    <result column="LOCAL_RANK" property="localRank" jdbcType="VARCHAR" />
+    <result column="GLOBAL_RANK" property="globalRank" jdbcType="VARCHAR" />
+    <result column="RANK_CFG_ID" property="rankCfgId" jdbcType="VARCHAR" />
+    <result column="CREATION_TIME" property="creationTime" jdbcType="VARCHAR" />
+    <result column="CREATON_BY" property="creatonBy" jdbcType="VARCHAR" />
+    <result column="LASTUPDATA_TIME" property="lastupdataTime" jdbcType="VARCHAR" />
+    <result column="LASTUPDATA_BY" property="lastupdataBy" jdbcType="VARCHAR" />
+    <result column="IS_DELETE" property="isDelete" jdbcType="VARCHAR" />
+    <result column="TERRITORY_NAME" property="territoryName" jdbcType="VARCHAR" />
+  </resultMap>
+  <select id="selectTerritoryForIndex" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    SELECT BSTDT.TERRITORY_NAME,OBDRD.ACIHEVE_RATE,OBDRD.GLOBAL_RANK
+      FROM OA.OA_BIZ_DATA_RANK_DATA OBDRD,
+           BASE.BASE_SALE_TERRITORY_DICT BSTDT
+     WHERE OBDRD.OBJECT = BSTDT.TERRITORY_ID
+           AND OBDRD.RANK_TYPE = 'SALE_TERRITORY'
+           AND OBDRD.PERIOD_TYPE = 'QUARTER'
+           AND OBDRD.BIZ_TYPE = 'SELL'
+           AND OBDRD.TERRITORY_LEVEL_ID = '3'
+           AND OBDRD.OU_ID=#{ouId}
+           AND OBDRD.PERIOD_NAME = (SELECT T.QUARTER_PERIOD
+			      				      FROM APPS.CUX_BC_BUDGET_PERIOD_V T
+			                         WHERE TRUNC(SYSDATE) >= T.START_DATE
+			                               AND TRUNC(SYSDATE) &lt;= T.END_DATE)
+           AND ROWNUM &lt; 11 ORDER BY OBDRD.GLOBAL_RANK
+  </select>
+  <select id="selectSelfForIndex" resultMap="BaseResultMap" parameterType="com.aus.common.model.RankData">
+    SELECT OBDRD.BIZ_TYPE,OBDRD.SYS_ACHIEVE_VALUE,OBDRD.ACIHEVE_RATE,OBDRD.TASK_VALUE,OBDRD.TASK_UNIT
+      FROM OA.OA_BIZ_DATA_RANK_DATA OBDRD
+     WHERE OBDRD.OU_ID=#{ouId}
+           AND OBDRD.RANK_TYPE = 'EMPLOYEE'
+           AND OBDRD.PERIOD_TYPE = 'QUARTER'
+           AND POSITION_ID = #{positionId}
+           AND OBJECT = #{object}
+           AND OBDRD.PERIOD_NAME = (SELECT T.QUARTER_PERIOD
+			      				      FROM APPS.CUX_BC_BUDGET_PERIOD_V T
+			                         WHERE TRUNC(SYSDATE) >= T.START_DATE
+			                               AND TRUNC(SYSDATE) &lt;= T.END_DATE)
+  </select>
+  <select id="selectSubLevelForIndex" resultMap="BaseResultMap" parameterType="com.aus.common.model.RankData">
+    SELECT OBDRD.BIZ_TYPE,
+    	   SUM(OBDRD.SYS_ACHIEVE_VALUE) SYS_ACHIEVE_VALUE,
+           SUM(OBDRD.ACIHEVE_RATE) ACIHEVE_RATE,
+           SUM(OBDRD.TASK_VALUE) TASK_VALUE,
+           SUM(OBDRD.TASK_UNIT) TASK_UNIT
+      FROM OA.OA_BIZ_DATA_RANK_DATA OBDRD
+     WHERE OBDRD.OU_ID=#{ouId}
+           AND OBDRD.RANK_TYPE = 'EMPLOYEE'
+           AND OBDRD.PERIOD_TYPE = 'QUARTER'
+           AND POSITION_ID IN (SELECT HPH.SUBORDINATE_POSITION_ID 
+           						 FROM AUPORTAL.BASE_HR_POSITION_HIERARCHY_V HPH 
+           						WHERE HPH.PARENT_POSITION_ID = #{positionId})
+           AND OBDRD.PERIOD_NAME = (SELECT T.QUARTER_PERIOD
+			      				      FROM APPS.CUX_BC_BUDGET_PERIOD_V T
+			                         WHERE TRUNC(SYSDATE) >= T.START_DATE
+			                               AND TRUNC(SYSDATE) &lt;= T.END_DATE)
+	       GROUP BY OBDRD.BIZ_TYPE
+  </select>
+  <!-- 获取用户主职位 -->
+	<select id="getPrimaryPosition" resultType="java.lang.String" parameterType="java.lang.String">
+	  	SELECT HPA.POSITION_ID 
+	  	  FROM AUPORTAL.BASE_HR_POSITION_ASSIGN_V HPA 
+	  	 WHERE HPA.PERSON_ID = #{personId}
+		       AND SYSDATE BETWEEN HPA.PEOPLE_START_DATE AND NVL(HPA.PEOPLE_END_DATE, TO_DATE('3000', 'YYYY'))
+	           AND SYSDATE BETWEEN HPA.EFFECTIVE_START_DATE AND NVL(HPA.EFFECTIVE_END_DATE, TO_DATE('3000', 'YYYY'))
+	           AND HPA.PRIMARY_FLAG='Y'
+    </select>
+</mapper>

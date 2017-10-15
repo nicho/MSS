@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.aus.authority.dao.IResourceDao">
+
+	<resultMap id="ResourceMap" type="com.aus.authority.model.ResourceDto">
+		<id column="RESOURCE_ID" property="resourceId" jdbcType="VARCHAR" />
+		<result column="RESOURCE_NAME" property="resourceName" jdbcType="VARCHAR" />
+		<result column="RESOURCE_CODE" property="resourceCode" jdbcType="VARCHAR" />
+		<result column="RESOURCE_DESC" property="resourceDesc" jdbcType="VARCHAR" />
+		<result column="MENU_NODE_ID" property="menuNodeId" jdbcType="VARCHAR" />
+		<result column="MENU_NODE_NAME" property="menuNodeName" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="ResourceTlMap" type="com.aus.authority.model.ResourceTlDto">
+		<result column="RESOURCE_ID" property="resourceId" jdbcType="VARCHAR" />
+		<result column="RESOURCE_NAME" property="resourceName" jdbcType="VARCHAR" />
+		<result column="RESOURCE_DESC" property="resourceDesc" jdbcType="VARCHAR" />
+		<result column="LANGUAGE" property="language" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<select id="findAllResource"  resultMap="ResourceMap" parameterType="com.aus.authority.model.ResourceDto">
+		SELECT BASERESOURCE.RESOURCE_ID,		       
+		       BASERESOURCE.RESOURCE_NAME,
+		       BASERESOURCE.RESOURCE_CODE,
+		       BASERESOURCE.RESOURCE_DESC,
+		       BASERESOURCE.MENU_NODE_ID,
+		       BASEMENU.MENU_NODE_NAME,
+		       BASERESOURCE.LAST_UPDATED_BY,
+		       TO_CHAR(BASERESOURCE.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASERESOURCE.CREATED_BY,
+		       TO_CHAR(BASERESOURCE.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM AUPORTAL.BASE_RESOURCE_VL BASERESOURCE,
+		  	   BASE_MENU_NODE_VL BASEMENU
+	     WHERE BASERESOURCE.MENU_NODE_ID = BASEMENU.MENU_NODE_ID
+	     <if test="resourceName != null and ''!= resourceName">
+		 	  AND BASERESOURCE.RESOURCE_NAME LIKE '%'|| #{resourceName} ||'%'
+	 	 </if>
+	 	 <if test="resourceCode != null and ''!= resourceCode">
+		 	  AND BASERESOURCE.RESOURCE_CODE LIKE '%'|| #{resourceCode} ||'%'
+	 	 </if>
+	 	 ORDER BY RESOURCE_ID DESC
+	</select>
+	
+	<select id="findResourceById"  resultMap="ResourceMap" parameterType="java.lang.String">
+		SELECT BASERESOURCE.RESOURCE_ID,		       
+		       BASERESOURCE.RESOURCE_NAME,
+		       BASERESOURCE.RESOURCE_CODE,
+		       BASERESOURCE.RESOURCE_DESC,
+		       BASERESOURCE.MENU_NODE_ID,
+		       BASEMENU.MENU_NODE_NAME,
+		       BASERESOURCE.LAST_UPDATED_BY,
+		       TO_CHAR(BASERESOURCE.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASERESOURCE.CREATED_BY,
+		       TO_CHAR(BASERESOURCE.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM AUPORTAL.BASE_RESOURCE_VL BASERESOURCE,
+		  	   BASE_MENU_NODE_VL BASEMENU
+	     WHERE BASERESOURCE.MENU_NODE_ID = BASEMENU.MENU_NODE_ID
+	       AND BASERESOURCE.RESOURCE_ID = #{resourceId}
+	</select>
+	
+	<select id="getResourceByMeunId"  resultMap="ResourceMap" parameterType="java.lang.String">
+		SELECT BASERESOURCE.RESOURCE_ID,		       
+		       BASERESOURCE.RESOURCE_NAME,
+		       BASERESOURCE.RESOURCE_CODE,
+		       BASERESOURCE.RESOURCE_DESC,
+		       BASERESOURCE.MENU_NODE_ID,
+		       BASEMENU.MENU_NODE_NAME,
+		       BASERESOURCE.LAST_UPDATED_BY,
+		       TO_CHAR(BASERESOURCE.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASERESOURCE.CREATED_BY,
+		       TO_CHAR(BASERESOURCE.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE
+		  FROM AUPORTAL.BASE_RESOURCE_VL BASERESOURCE,
+		  	   BASE_MENU_NODE_VL BASEMENU
+	     WHERE BASERESOURCE.MENU_NODE_ID = BASEMENU.MENU_NODE_ID
+	       AND BASERESOURCE.MENU_NODE_ID = #{menuNodeId}
+	</select>
+	
+
+	<insert id="saveResource" parameterType="com.aus.authority.model.ResourceDto">
+	    <selectKey resultType="java.lang.String" order="BEFORE" keyProperty="resourceId">
+			SELECT BASE.BASE_RESOURCE_S.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO BASE.BASE_RESOURCE
+		  (
+		  <trim suffixOverrides=",">
+			   RESOURCE_ID,
+			   <if test="resourceCode != null and ''!= resourceCode">
+			 	  RESOURCE_CODE,
+		 	   </if>
+		 	   <if test="menuNodeId != null and ''!= menuNodeId">
+			 	  MENU_NODE_ID,
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN,
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY,
+		 	   </if>
+			   LAST_UPDATE_DATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY,
+		 	   </if>
+			   CREATION_DATE,
+			   RESOURCE_TYPE,		  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			   #{resourceId},
+			   <if test="resourceCode != null and ''!= resourceCode">
+			 	  #{resourceCode},
+		 	   </if>
+		 	   <if test="menuNodeId != null and ''!= menuNodeId">
+			 	  #{menuNodeId},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  #{lastUpdatedBy},
+		 	   </if>
+			   SYSDATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  #{createdBy},
+		 	   </if>
+			   SYSDATE,
+			   1,
+		   </trim>
+		  )	
+	</insert>
+	
+	<insert id="saveResourceTl" parameterType="com.aus.authority.model.ResourceTlDto">
+		INSERT INTO BASE.BASE_RESOURCE_TL
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="resourceId != null and ''!= resourceId">
+			 	  RESOURCE_ID,
+		 	   </if>
+			   <if test="resourceName != null and ''!= resourceName">
+			 	  RESOURCE_NAME,
+		 	   </if>
+		 	   <if test="resourceDesc != null and ''!= resourceDesc">
+			 	  RESOURCE_DESC,
+		 	   </if>
+		 	   <if test="language != null and ''!= language">
+			 	  LANGUAGE,
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN,
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY,
+		 	   </if>
+			   LAST_UPDATE_DATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY,
+		 	   </if>
+			   CREATION_DATE,		  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="resourceId != null and ''!= resourceId">
+			 	  #{resourceId},
+		 	   </if>
+			   <if test="resourceName != null and ''!= resourceName">
+			 	  #{resourceName},
+		 	   </if>
+		 	   <if test="resourceDesc != null and ''!= resourceDesc">
+			 	  #{resourceDesc},
+		 	   </if>
+		 	   <if test="language != null and ''!= language">
+			 	  #{language},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  #{lastUpdatedBy},
+		 	   </if>
+			   SYSDATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  #{createdBy},
+		 	   </if>
+			   SYSDATE,
+		   </trim>
+		  )	
+	</insert>
+	
+	<update id="updateResource" parameterType="com.aus.authority.model.ResourceDto">
+		UPDATE BASE.BASE_RESOURCE A
+		   SET 
+		   <trim suffixOverrides=",">	   		       
+		       <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  A.LAST_UPDATE_LOGIN = #{lastUpdateLogin}, 
+		 	   </if>
+		 	   <if test="menuNodeId != null and ''!= menuNodeId">
+			 	  A.MENU_NODE_ID = #{menuNodeId},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  A.LAST_UPDATED_BY = #{lastUpdatedBy},
+		 	   </if>
+		 	   LAST_UPDATE_DATE = SYSDATE
+		   </trim>
+		 WHERE A.RESOURCE_ID = #{resourceId}
+	</update>
+	
+	<update id="updateResourceT1" parameterType="com.aus.authority.model.ResourceTlDto">
+		UPDATE BASE.BASE_RESOURCE_TL A
+		   SET 
+		   <trim suffixOverrides=",">	   
+		   	   <if test="resourceName != null and ''!= resourceName">
+			 	  RESOURCE_NAME = #{resourceName},
+		 	   </if>
+		 	   <if test="resourceDesc != null and ''!= resourceDesc">
+			 	  RESOURCE_DESC = #{resourceDesc},
+		 	   </if>	       
+		       <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  A.LAST_UPDATE_LOGIN = #{lastUpdateLogin}, 
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  A.LAST_UPDATED_BY = #{lastUpdatedBy},
+		 	   </if>
+		 	   LAST_UPDATE_DATE = SYSDATE
+		   </trim>
+		 WHERE A.RESOURCE_ID = #{resourceId}
+		   AND A.LANGUAGE = USERENV('LANG')
+	</update>
+	
+	<delete id="deleteResourceById" parameterType="java.lang.String">  
+        DELETE FROM BASE.BASE_RESOURCE WHERE RESOURCE_ID = #{resourceId}  
+    </delete>
+    
+    <delete id="deleteResourceTlById" parameterType="java.lang.String">  
+        DELETE FROM BASE.BASE_RESOURCE_TL WHERE RESOURCE_ID = #{resourceId}  
+    </delete>  
+	
+</mapper>

@@ -1,0 +1,616 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.aus.authority.dao.IUserDao">
+
+	<resultMap id="UserMap" type="com.aus.authority.model.UserDto">
+		<id column="USER_ID" property="userId" jdbcType="VARCHAR" />
+		<result column="USER_NAME" property="userName" jdbcType="VARCHAR" />
+		<result column="USER_TYPE" property="userType" jdbcType="VARCHAR" />
+		<result column="USER_TYPE_NAME" property="userTypeName" jdbcType="VARCHAR" />
+		<result column="PERSON_ID" property="personId" jdbcType="VARCHAR" />
+		<result column="PERSON_NAME" property="personName" jdbcType="VARCHAR" />
+		<result column="CUST_ACCOUNT_ID" property="custAccountId" jdbcType="VARCHAR" />
+		<result column="CUST_ACCOUNT_NAME" property="custAccountName" jdbcType="VARCHAR" />
+		<result column="STORE_CODE" property="storeCode" jdbcType="VARCHAR" />
+		<result column="BEGIN_DATE" property="beginDate" jdbcType="VARCHAR" />
+		<result column="END_DATE" property="endDate" jdbcType="VARCHAR" />
+		<result column="PASSWORD" property="password" jdbcType="VARCHAR" />
+		<result column="INTERNAL_USER" property="internalUser" jdbcType="VARCHAR" />
+		<result column="IS_EBSUSER" property="isEbsUser" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+		<result column="SALT" property="salt" jdbcType="VARCHAR" />
+		<result column="PWD_MOD_DATE" property="pwdModDate" jdbcType="VARCHAR" />
+		<result column="OUT_DATE" property="outDate" jdbcType="VARCHAR" />
+		<result column="VALIDATA_CODE" property="validataCode" jdbcType="VARCHAR" />
+		<result column="EMAIL" property="email" jdbcType="VARCHAR" />
+		<result column="PHONE" property="phone" jdbcType="VARCHAR" />
+		
+	</resultMap>
+	
+	<resultMap id="LanguageMap" type="com.aus.authority.model.LanguageDto">
+		<result column="LANGUAGE_CODE" property="languageCode" jdbcType="VARCHAR" />
+		<result column="ISO_LANGUAGE" property="isoLanguage" jdbcType="VARCHAR" />
+		<result column="NLS_LANGUAGE" property="nlsLanguage" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="ResponsibilityUserMap" type="com.aus.authority.model.ResponsibilityUserDto">
+		<result column="RESPONSIBILITY_ID" property="responsibilityId" jdbcType="VARCHAR" />
+		<result column="USER_ID" property="ueseId" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="VARCHAR" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR" />
+		<result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" />
+		<result column="CREATION_DATE" property="creationDate" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<select id="getAllUser"  resultMap="UserMap" parameterType="com.aus.authority.model.UserDto">
+		SELECT DISTINCT BASEUSER.USER_ID,	       
+		       BASEUSER.USER_NAME,
+		       BASEUSER.USER_TYPE,
+		       DECODE(BASEUSER.USER_TYPE,'20','员工用户','30','经销商用户','40','门店用户') USER_TYPE_NAME,
+		       BASEUSER.PERSON_ID,
+		       PERSON.LAST_NAME PERSON_NAME,
+		       BASEUSER.CUST_ACCOUNT_ID,
+		       CIV.ACCOUNT_NAME CUST_ACCOUNT_NAME,
+		       BASEUSER.STORE_CODE,
+		       TO_CHAR(BASEUSER.BEGIN_DATE,'YYYY-MM-DD') BEGIN_DATE,
+		       TO_CHAR(BASEUSER.END_DATE,'YYYY-MM-DD') END_DATE,
+		       BASEUSER.PASSWORD,
+		       BASEUSER.INTERNAL_USER,
+		       DECODE(BASEUSER.INTERNAL_USER,'Y','是','N','否') IS_EBSUSER,
+		       BASEUSER.LAST_UPDATE_LOGIN,
+		       BASEUSER.LAST_UPDATED_BY,
+		       TO_CHAR(BASEUSER.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASEUSER.CREATED_BY,
+		       TO_CHAR(BASEUSER.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE,
+		       TO_CHAR(BASEUSER.PWD_MOD_DATE,'YYYY-MM-DD') PWD_MOD_DATE,
+		       PERSON.ORG_ID,
+		       PERSON.PERSON_USER_TYPE,
+		       (
+		        SELECT CASE WHEN POSI.OU_ORGANIZATION_ID=#{orgId} THEN 'Y' ELSE 'N' END ORG_STATUS FROM  AUPORTAL.BASE_HR_POSITION_ASSIGN_V PA,AUPORTAL.BASE_HR_POSITION_V POSI
+ 
+             WHERE   SYSDATE BETWEEN PA.PEOPLE_START_DATE AND
+			       NVL(PA.PEOPLE_END_DATE, TO_DATE('3000', 'YYYY'))
+       AND SYSDATE BETWEEN PA.EFFECTIVE_START_DATE AND
+			       NVL(PA.EFFECTIVE_END_DATE, TO_DATE('3000', 'YYYY'))
+			   AND SYSDATE BETWEEN POSI.EFFECTIVE_START_DATE AND
+			       NVL(POSI.EFFECTIVE_END_DATE, TO_DATE('3000', 'YYYY')) 
+             AND   POSI.POSITION_ID = PA.POSITION_ID
+             AND PA.PRIMARY_FLAG='Y'
+		     AND PA.PERSON_ID =  BASEUSER.PERSON_ID
+		       )ORG_STATUS
+		  FROM BASE.BASE_USER BASEUSER,
+		  	    AUPORTAL.BASE_CUSTOMER_ACCOUNT_V CIV,
+		  	    AUPORTAL.BASE_INV_STORE_V INVSTORE,
+		  	   (SELECT  DISTINCT F.LAST_NAME,'PERSON' AS PERSON_USER_TYPE,F.PERSON_ID,POSI.OU_ORGANIZATION_ID ORG_ID FROM 
+                    APPS.PER_ALL_PEOPLE_F F,
+                    AUPORTAL.BASE_HR_POSITION_ASSIGN_V  E,
+                    AUPORTAL.BASE_HR_POSITION_V POSI
+		              WHERE 
+		                <![CDATA[
+				        F.EFFECTIVE_START_DATE <= SYSDATE
+				       ]]>
+		             AND F.EFFECTIVE_END_DATE >= SYSDATE
+		             AND F.PERSON_ID = E.PERSON_ID
+		             AND E.POSITION_ID = POSI.POSITION_ID
+		              <if test="responsibilityId != null and ''!= responsibilityId and responsibilityId!='1017'">
+		              <![CDATA[AND E.EFFECTIVE_START_DATE <= SYSDATE  ]]>
+                     AND E.EFFECTIVE_END_DATE>=SYSDATE
+                     <![CDATA[AND E.PEOPLE_START_DATE <=SYSDATE]]>
+                     AND E.PEOPLE_END_DATE >= SYSDATE
+                     <![CDATA[AND POSI.EFFECTIVE_START_DATE<=SYSDATE]]>
+                     AND POSI.EFFECTIVE_END_DATE >=SYSDATE
+                    </if>
+           UNION
+			SELECT
+			DISTINCT
+			P.LAST_NAME USER_NAME,
+			'GUIDE' AS PERSON_USER_TYPE,
+			P.PERSON_ID PERSON_ID,
+			P.ATTRIBUTE6 ORG_ID 
+			FROM PER_PERSON_TYPES_V PT,
+			APPS.PER_ALL_PEOPLE_F P,
+			APPS.PER_PERSON_TYPE_USAGES_F PTU,
+			 AUPORTAL.BASE_ORGANIZATION_V OU 
+			WHERE PT.PERSON_TYPE_ID = PTU.PERSON_TYPE_ID
+			AND P.PERSON_ID = PTU.PERSON_ID
+			AND PT.ACTIVE_FLAG = 'Y'
+			AND P.PERSON_TYPE_ID = 6
+			AND TRUNC(SYSDATE) BETWEEN P.EFFECTIVE_START_DATE AND
+			P.EFFECTIVE_END_DATE
+			AND TRUNC(SYSDATE) BETWEEN PTU.EFFECTIVE_START_DATE AND
+			PTU.EFFECTIVE_END_DATE
+			AND PT.USER_PERSON_TYPE = '导购'
+			AND OU.ORGANIZATION_ID= P.ATTRIBUTE6
+		       ) PERSON
+	     WHERE BASEUSER.CUST_ACCOUNT_ID = CIV.CUST_ACCOUNT_ID(+)
+	       AND BASEUSER.PERSON_ID = PERSON.PERSON_ID(+)
+	       AND BASEUSER.STORE_CODE = INVSTORE.STORE_CODE(+)
+	     <if test="personId != null and ''!= personId">
+		 	  AND BASEUSER.PERSON_ID = #{personId}
+	 	 </if>
+	 	 <if test="custAccountId != null and ''!= custAccountId">
+		 	  AND BASEUSER.CUST_ACCOUNT_ID = #{custAccountId}
+	 	 </if>
+	 	 <if test="pageUserType != null and ''!= pageUserType">
+		 	  AND BASEUSER.USER_TYPE = #{pageUserType}
+	 	 </if>
+	  <if test="isValid != null and ''!= isValid and isValid=='Y'.toString()">
+		 	  AND BASEUSER.END_DATE>=TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')
+	 	 </if>
+	 	  <if test="isValid != null and ''!= isValid and isValid=='N'.toString()">
+		 	 <![CDATA[ AND BASEUSER.END_DATE<TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')+1]]>
+	 	 </if> 
+	 	 <if test="storeCode != null and ''!= storeCode">
+		 	  AND BASEUSER.STORE_CODE = #{storeCode}
+	 	 </if>
+	 	 <if test="responsibilityId != null and ''!= responsibilityId">
+		 	  AND BASEUSER.USER_TYPE IN 
+		 	  		(
+		 	  			SELECT DECODE(D.RESOURCE_CODE,
+					              'usertype:store',
+					              '40',
+					              'usertype:dealer',
+					              '30',
+					              'usertype:employee',
+					              '20')
+					  FROM BASE.BASE_ROLE_RESOURCE       A,
+					       BASE.BASE_RESPONSIBILITY_ROLE B,
+					       BASE.BASE_RESOURCE            D
+					 WHERE A.ROLE_ID = B.ROLE_ID
+					   AND A.RESOURCE_ID = D.RESOURCE_ID
+					   AND TRIM(b.RESPONSIBILITY_ID) = #{responsibilityId}
+					   AND D.RESOURCE_CODE IN
+					       ('usertype:store', 'usertype:dealer', 'usertype:employee')
+		 	  		)
+	 	 </if>
+	 	 <if test="userName != null and ''!= userName">
+		 	  AND UPPER(BASEUSER.USER_NAME) LIKE '%'|| UPPER(#{userName}) ||'%'
+	 	 </if>
+	 	 <if test="userType != null and ''!= userType and userType == '10'.toString()">
+	 		 <if test="orgId != null and ''!= orgId">
+			 	 AND (
+			 	  	   (
+			 	  			BASEUSER.USER_TYPE = '20' 
+			 	  			AND 
+			 	  			EXISTS (
+			 	  			 SELECT 'X' FROM  CUX.CUX_CDM_ACCESS_BASEDATA CAB
+							  WHERE CAB.ACCESS_TYPE = '9'
+							    AND CAB.CUST_ACCOUNT_ID IN (2,3)
+							    AND CAB.ORG_ID = #{orgId}
+							    AND CAB.USER_ID = PERSON.ORG_ID			 	  			
+			 	  			) 
+			 	  		)
+		              OR   (
+		                    BASEUSER.USER_TYPE IN ('30','40') 
+		                    AND 
+			 	  			EXISTS (
+			 	  			 SELECT 'X' FROM BRC.BRC_INV_V A,
+					                BRC.BRC_ORGRANIZATION_V B
+					         WHERE A.ORGANIZATION_ID = B.ORGANIZATION_ID
+					           AND B.ORG_ID = #{orgId}
+					           AND A.INV_CODE = BASEUSER.USER_NAME		 	  			
+			 	  			) 
+		                    
+		              )
+		              	 <if test="responsibilityId != null and ''!= responsibilityId and responsibilityId=='1017'">
+		             OR  ( BASEUSER.USER_TYPE = '20' AND BASEUSER.PERSON_ID = '0') 
+		             OR  ( BASEUSER.USER_TYPE = '20' AND BASEUSER.PERSON_ID IS NULL) 
+		                </if>
+		           )
+	 		 </if>
+	 	 </if>
+	 	 <if test="userType == null or '' == userType or userType != '10'.toString()">
+              AND 1 &lt;&gt; 1
+	 	 </if>
+	 	 ORDER BY USER_ID ASC
+	</select>
+	
+	<select id="findUserById"  resultMap="UserMap" parameterType="java.lang.Long">
+		SELECT BASEUSER.USER_ID,		       
+		       BASEUSER.USER_NAME,
+		       BASEUSER.USER_TYPE,
+		       DECODE(BASEUSER.USER_TYPE,'20','员工用户','30','经销商用户','40','门店用户') USER_TYPE_NAME,
+		       BASEUSER.PERSON_ID,
+		        (SELECT F.LAST_NAME FROM APPS.PER_ALL_PEOPLE_F F
+		       	 WHERE 
+				  <![CDATA[
+			        F.EFFECTIVE_START_DATE <= SYSDATE
+			       ]]>
+			       AND F.EFFECTIVE_END_DATE >= SYSDATE
+			       AND BASEUSER.PERSON_ID = F.PERSON_ID
+		       ) PERSON_NAME,
+		       (SELECT F.EMAIL_ADDRESS FROM APPS.PER_ALL_PEOPLE_F F
+		       	 WHERE 
+				  <![CDATA[
+			        F.EFFECTIVE_START_DATE <= SYSDATE
+			       ]]>
+			       AND F.EFFECTIVE_END_DATE >= SYSDATE
+			       AND BASEUSER.PERSON_ID = F.PERSON_ID
+		       ) EMAIL,
+		       (SELECT F.Attribute5 FROM APPS.PER_ALL_PEOPLE_F F
+		       	 WHERE 
+				  <![CDATA[
+			        F.EFFECTIVE_START_DATE <= SYSDATE
+			       ]]>
+			       AND F.EFFECTIVE_END_DATE >= SYSDATE
+			       AND BASEUSER.PERSON_ID = F.PERSON_ID
+		       ) PHONE,
+		       BASEUSER.CUST_ACCOUNT_ID,
+		       CIV.ACCOUNT_NAME CUST_ACCOUNT_NAME,
+		       BASEUSER.STORE_CODE,
+		       TO_CHAR(BASEUSER.BEGIN_DATE,'YYYY-MM-DD') BEGIN_DATE,
+		       TO_CHAR(BASEUSER.END_DATE,'YYYY-MM-DD') END_DATE,
+		       BASEUSER.PASSWORD,
+		       BASEUSER.INTERNAL_USER,
+		       DECODE(BASEUSER.INTERNAL_USER,'Y','是','N','否') IS_EBSUSER,
+		       BASEUSER.LAST_UPDATE_LOGIN,
+		       BASEUSER.LAST_UPDATED_BY,
+		       TO_CHAR(BASEUSER.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASEUSER.CREATED_BY,
+		       TO_CHAR(BASEUSER.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE,
+		       TO_CHAR(BASEUSER.PWD_MOD_DATE,'YYYY-MM-DD') PWD_MOD_DATE,
+		       BASEUSER.SALT,
+		       TO_CHAR(BASEUSER.OUT_DATE,'YYYY-MM-DD') OUT_DATE,
+		       BASEUSER.VALIDATA_CODE
+		  FROM BASE.BASE_USER BASEUSER,
+		  	   APPS.HZ_CUST_ACCOUNTS CIV
+	     WHERE USER_ID = #{userId}       
+	       AND BASEUSER.CUST_ACCOUNT_ID = CIV.CUST_ACCOUNT_ID(+)
+	</select>
+	
+    
+    <insert id="insertUser" parameterType="com.aus.authority.model.UserDto">
+	    <selectKey resultType="java.lang.String" order="BEFORE" keyProperty="userId">
+			SELECT BASE.BASE_USER_S.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO BASE.BASE_USER
+		  (
+		  <trim suffixOverrides=",">
+			  	USER_ID,
+			   <if test="userName != null and ''!= userName">
+			 	  USER_NAME,
+		 	   </if>
+		 	   <if test="userType != null and ''!= userType">
+			 	  USER_TYPE,
+		 	   </if>
+		 	   <if test="personId != null and ''!= personId">
+			 	  PERSON_ID,
+		 	   </if>
+		 	   <if test="custAccountId != null and ''!= custAccountId">
+			 	  CUST_ACCOUNT_ID,
+		 	   </if>
+		 	   <if test="storeCode != null and ''!= storeCode">
+			 	  STORE_CODE,
+		 	   </if>
+		 	   <if test="beginDate != null and ''!= beginDate">
+			 	  BEGIN_DATE,
+		 	   </if>
+		 	   <if test="endDate != null and ''!= endDate">
+			 	  END_DATE,
+		 	   </if>
+		 	   <if test="password != null and ''!= password">
+			 	  PASSWORD,
+		 	   </if>
+		 	   <if test="salt != null and ''!= salt">
+			 	  SALT,
+		 	   </if>
+		 	   <if test="internalUser != null and ''!= internalUser">
+			 	  INTERNAL_USER,
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN,
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY,
+		 	   </if>
+			   LAST_UPDATE_DATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY,
+		 	   </if>
+		 	   <if test="pwdModDate != null and ''!= pwdModDate">
+			 	  PWD_MOD_DATE,
+		 	   </if>
+			   CREATION_DATE,		  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			   #{userId},
+			   <if test="userName != null and ''!= userName">
+			 	  #{userName},
+		 	   </if>
+		 	   <if test="userType != null and ''!= userType">
+			 	  #{userType},
+		 	   </if>
+		 	   <if test="personId != null and ''!= personId">
+			 	  #{personId},
+		 	   </if>
+		 	   <if test="custAccountId != null and ''!= custAccountId">
+			 	  #{custAccountId},
+		 	   </if>
+		 	   <if test="storeCode != null and ''!= storeCode">
+			 	  #{storeCode},
+		 	   </if>
+		 	   <if test="beginDate != null and ''!= beginDate">
+			 	  TO_DATE(#{beginDate},'yyyy-mm-dd'),
+		 	   </if>
+		 	   <if test="endDate != null and ''!= endDate">
+			 	  TO_DATE(#{endDate},'yyyy-mm-dd'),
+		 	   </if>
+		 	   <if test="password != null and ''!= password">
+			 	  #{password},
+		 	   </if>
+		 	   <if test="salt != null and ''!= salt">
+			 	  #{salt},
+		 	   </if>
+		 	   <if test="internalUser != null and ''!= internalUser">
+			 	  #{internalUser},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  #{lastUpdatedBy},
+		 	   </if>
+			   SYSDATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  #{createdBy},
+		 	   </if>
+		 	   <if test="pwdModDate != null and ''!= pwdModDate">
+			 	  TO_DATE(#{pwdModDate},'yyyy-mm-dd'),
+		 	   </if>
+			   SYSDATE,
+		   </trim>
+		  )	
+	</insert>
+	
+	<update id="updateUser" parameterType="com.aus.authority.model.UserDto">
+		UPDATE BASE.BASE_USER A
+		   SET 
+		   <trim suffixOverrides=",">	   
+		   	   <if test="userType != null and ''!= userType">
+			 	  A.USER_TYPE = #{userType}, 
+		 	   </if>
+		 	    <if test="personId != null">
+			 	  A.PERSON_ID = #{personId}, 
+			 	 </if>
+		 	   <if test="custAccountId != null and ''!= custAccountId">
+			 	  A.CUST_ACCOUNT_ID = #{custAccountId}, 
+		 	   </if>
+		 	   <if test="storeCode != null and ''!= storeCode">
+			 	  A.STORE_CODE = #{storeCode}, 
+		 	   </if>
+		 	   <if test="beginDate != null and ''!= beginDate">
+			 	  A.BEGIN_DATE = TO_DATE(#{beginDate},'yyyy-mm-dd'),
+		 	   </if>		       
+		       <if test="endDate != null and ''!= endDate">
+			 	  A.END_DATE = TO_DATE(#{endDate},'yyyy-mm-dd'),
+		 	   </if>		       
+		       <if test="password != null and ''!= password">
+			 	  A.PASSWORD = #{password},
+		 	   </if> 
+		 	   <if test="internalUser != null and ''!= internalUser">
+			 	  A.INTERNAL_USER = #{internalUser},
+		 	   </if>
+		 	   <if test="salt != null and ''!= salt">
+			 	  A.SALT = #{salt},
+		 	   </if>
+		 	   <if test="pwdModDate != null and ''!= pwdModDate">
+			 	  A.PWD_MOD_DATE = TO_DATE(#{pwdModDate},'yyyy-mm-dd'),
+		 	   </if>
+		 	    <if test="userName != null and ''!= userName">
+			 	  A.USER_NAME = #{userName},
+		 	   </if>
+		 	   <if test="outDate != null and ''!= outDate">
+			 	  A.OUT_DATE = TO_DATE(#{outDate},'yyyy-mm-dd'),
+		 	   </if>
+		 	   <if test="validataCode != null and ''!= validataCode">
+			 	  A.VALIDATA_CODE = #{validataCode},
+		 	   </if>				       
+		   </trim>
+		 WHERE A.USER_ID = #{userId}
+	</update>
+	
+	<select id="findUserByUserName"  resultMap="UserMap" parameterType="java.lang.String">
+		SELECT BASEUSER.USER_ID,		       
+		       BASEUSER.USER_NAME,
+		       BASEUSER.USER_TYPE,
+		       DECODE(BASEUSER.USER_TYPE,'20','员工用户','30','经销商用户','40','门店用户') USER_TYPE_NAME,
+		       BASEUSER.PERSON_ID,
+		        (SELECT F.LAST_NAME FROM APPS.PER_ALL_PEOPLE_F F
+		       	 WHERE 
+				  <![CDATA[
+			        F.EFFECTIVE_START_DATE <= SYSDATE
+			       ]]>
+			       AND F.EFFECTIVE_END_DATE >= SYSDATE
+			       AND BASEUSER.PERSON_ID = F.PERSON_ID
+		       ) PERSON_NAME,
+		       BASEUSER.CUST_ACCOUNT_ID,
+		       CIV.ACCOUNT_NAME CUST_ACCOUNT_NAME,
+		       BASEUSER.STORE_CODE,
+		       TO_CHAR(BASEUSER.BEGIN_DATE,'YYYY-MM-DD') BEGIN_DATE,
+		       TO_CHAR(BASEUSER.END_DATE,'YYYY-MM-DD') END_DATE,
+		       BASEUSER.PASSWORD,
+		       BASEUSER.INTERNAL_USER,
+		       DECODE(BASEUSER.INTERNAL_USER,'Y','是','N','否') IS_EBSUSER,
+		       BASEUSER.LAST_UPDATE_LOGIN,
+		       BASEUSER.LAST_UPDATED_BY,
+		       TO_CHAR(BASEUSER.LAST_UPDATE_DATE,'YYYY-MM-DD') LAST_UPDATE_DATE,
+		       BASEUSER.CREATED_BY,
+		       TO_CHAR(BASEUSER.CREATION_DATE,'YYYY-MM-DD') CREATION_DATE,
+		       TO_CHAR(BASEUSER.PWD_MOD_DATE,'YYYY-MM-DD') PWD_MOD_DATE,
+		       BASEUSER.SALT,
+		       TO_CHAR(BASEUSER.OUT_DATE,'YYYY-MM-DD') OUT_DATE,
+		       BASEUSER.VALIDATA_CODE
+		  FROM BASE.BASE_USER BASEUSER,
+		  	   APPS.HZ_CUST_ACCOUNTS CIV
+	     WHERE UPPER(BASEUSER.USER_NAME) = UPPER(#{userName})
+	       AND BASEUSER.CUST_ACCOUNT_ID = CIV.CUST_ACCOUNT_ID(+)
+	</select>
+	
+	<select id="getLanguageByISO"  resultMap="LanguageMap" parameterType="java.lang.String">
+		SELECT LANGUAGE_CODE, 
+		       NLS_LANGUAGE,
+		       ISO_LANGUAGE 
+		  FROM AUPORTAL.BASE_LANGUAGE_V
+		 WHERE ISO_LANGUAGE = UPPER(#{language})
+	</select>
+	
+	<select id="exeUserSyn" statementType="CALLABLE" >             
+        {call APPS.PROC_USER_CDM_SYN(
+            #{userId,mode=IN,jdbcType=VARCHAR,javaType=String})
+        }
+    </select>
+    
+    <select id="exeUserModifySyn" statementType="CALLABLE" >             
+        {call APPS.PROC_USER_CDM_UPDATE(
+            #{userId,mode=IN,jdbcType=VARCHAR,javaType=String})
+        }
+    </select>
+    
+    
+    <select id="exePwdSyn" statementType="CALLABLE" >             
+        { call APPS.PROC_USERPWD_CDM_SYN(
+            #{userName,mode=IN,jdbcType=VARCHAR,javaType=String},
+            #{newPwd,mode=IN,jdbcType=VARCHAR,javaType=String})
+        }
+    </select>
+    
+    <select id="getPersonEmail"  resultType="java.lang.String" parameterType="java.lang.String">
+	      SELECT PAP.EMAIL_ADDRESS
+	        FROM AUPORTAL.BASE_HR_PERSON_V PAP, AUPORTAL.BASE_USER USR
+	       WHERE PAP.EFFECTIVE_END_DATE > SYSDATE
+	         AND PAP.PERSON_ID = #{personId}
+			 AND PAP.PERSON_ID = USR.PERSON_ID(+)
+			 AND USR.END_DATE > SYSDATE
+    </select>
+	
+	
+	<update id="alterSessionLang" parameterType="java.lang.String">
+		ALTER SESSION SET NLS_LANGUAGE = #{language}
+	</update>
+	
+	<select id="getOracleLang"  resultType="java.lang.String">
+		SELECT USERENV('LANG') FROM DUAL
+	</select>
+
+    <delete id="deleteUserResponsibility" parameterType="java.lang.String">  
+        DELETE FROM BASE.BASE_RESPONSIBILITY_USER WHERE USER_ID = #{userId}  
+    </delete>
+      <delete id="deleteUserResponsibilityById" parameterType="java.lang.String">  
+        DELETE FROM BASE.BASE_RESPONSIBILITY_USER WHERE USER_ID = #{userId} AND  RESPONSIBILITY_ID = #{responsibilityId}
+    </delete>
+    
+    
+    <insert id="saveUserResponsibility" parameterType="com.aus.authority.model.ResponsibilityUserDto">
+		INSERT INTO BASE.BASE_RESPONSIBILITY_USER
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="responsibilityId != null and ''!= responsibilityId">
+			 	  RESPONSIBILITY_ID,
+		 	   </if>
+			   <if test="userId != null and ''!= userId">
+			 	  USER_ID,
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  LAST_UPDATE_LOGIN,
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  LAST_UPDATED_BY,
+		 	   </if>
+			   LAST_UPDATE_DATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  CREATED_BY,
+		 	   </if>
+			   CREATION_DATE,		  
+		   </trim>
+		   )
+		VALUES
+		  (
+		  <trim suffixOverrides=",">
+			   <if test="responsibilityId != null and ''!= responsibilityId">
+			 	  #{responsibilityId},
+		 	   </if>
+			   <if test="userId != null and ''!= userId">
+			 	  #{userId},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdateLogin != null and ''!= lastUpdateLogin">
+			 	  #{lastUpdateLogin},
+		 	   </if>
+		 	   <if test="lastUpdatedBy != null and ''!= lastUpdatedBy">
+			 	  #{lastUpdatedBy},
+		 	   </if>
+			   SYSDATE,
+			   <if test="createdBy != null and ''!= createdBy">
+			 	  #{createdBy},
+		 	   </if>
+			   SYSDATE,
+		   </trim>
+		  )	
+	</insert>
+	
+	<select id="findUserByPersonId" resultType="java.lang.Long" parameterType="java.lang.String">
+		SELECT COUNT(1)
+		  FROM BASE.BASE_USER A
+	     WHERE A.PERSON_ID = #{personId}
+	       AND A.PERSON_ID &lt;&gt; 0
+	     <if test="userId != null and ''!= userId">
+	       AND A.USER_ID  &lt;&gt; #{userId}
+	      </if>
+	</select>   	
+   <select id="getPersonOrgId" resultType="java.lang.String" parameterType="java.lang.String">
+	 select f.attribute6  ou_id
+     from apps.per_all_people_f f
+    where f.person_id = #{personId}
+      and f.person_type_id = 6
+      and trunc(sysdate) between f.effective_start_date and
+          f.effective_end_date
+      and rownum = 1 
+	</select>   	
+	
+    <select id="getSubinvDto_inv" resultType="com.aus.authority.model.SubinvDto" parameterType="java.lang.String">
+		 select isb.subinv_code, isb.subinv_name,isb.subinv_type
+		  from base_user u, base_inv_subinv_v isb
+		 where u.store_code = isb.subinv_code
+		   and isb.subinv_type = '21'
+		   and isb.ou_id = #{orgId}
+		   and u.user_type = '30'
+		   and u.user_name = #{userName}
+	</select>   	
+    <select id="getSubinvDto_customer" resultType="com.aus.authority.model.SubinvDto" parameterType="java.lang.String">
+	  select ca.secondary_inventory_name subinv_code,'20' subinv_type,
+	        ca.secondary_inventory_desc subinv_name,ca.CHANNEL_TYPE,ca.ACCOUNT_NAME,ca.cust_account_id
+	   from base.base_user u, base_customer_account_v ca
+	  where u.cust_account_id = ca.cust_account_id
+	    and ca.org_id =  #{orgId}
+	    and u.user_name = #{userName}
+	    and rownum=1
+	</select>    
+	
+	<select id="getStoreList" resultType="com.aus.authority.model.StoreDto" parameterType="com.aus.authority.model.StoreDto">
+	  	SELECT ST.STORE_CODE as storeCode, ST.STORE_NAME as storeName, ST.PROVINCE as province, ST.CITY as city
+		  FROM AUPORTAL.BASE_INV_STORE_V ST
+		 WHERE ST.OU_ID in (
+			 SELECT CAB.USER_ID ORG_ID_CHILD
+	          FROM CUX.CUX_CDM_ACCESS_BASEDATA CAB
+	         WHERE CAB.ACCESS_TYPE = '9'
+	           AND CAB.CUST_ACCOUNT_ID IN (2, 3)
+	           AND CAB.ORG_ID = #{orgId})
+		 <if test="storeName != null and ''!= storeName">
+		 	AND ST.STORE_NAME LIKE '%' || #{storeName} || '%'
+		 </if>
+		 <if test="storeCode != null and ''!= storeCode">
+		 	AND ST.STORE_CODE LIKE '%' || #{storeCode} || '%'
+		 </if>
+	</select>  
+</mapper>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.aus.common.dao.BaseGuestLimitDao">
+	<insert id="addBaseGuestLimit" parameterType="com.aus.common.model.BaseGuestLimit">
+		<selectKey resultType="java.lang.String" order="BEFORE"
+			keyProperty="guser_limit_id">
+			SELECT AUPORTAL.OA_GUSER_LIMIT_ID_S.NEXTVAL FROM DUAL
+		</selectKey>
+		insert into  BASE.BASE_GUSER_LIMIT 
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			GUSER_LIMIT_ID,USER_ID,FUN_ID,IS_DELETE,CREATION_DATE,CREATION_BY,LAST_UPDATE_DATE,LAST_UPDATE_BY
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			#{guser_limit_id,jdbcType=NUMERIC},
+			#{user_id,jdbcType=VARCHAR},#{fun_id,jdbcType=VARCHAR},'0',
+			sysdate,#{creation_by,jdbcType=NUMERIC},sysdate,#{last_update_by,jdbcType=NUMERIC}
+		</trim>
+	</insert>
+		<insert id="addBaseGuestLimitObj" parameterType="com.aus.common.model.BaseGuestLimitObj">
+		insert into  BASE.BASE_GUSER_LIMIT_OBJ 
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			GUSER_LIMIT_ID,OBJ_TYPE,OBJ_VALUE,IS_DELETE,CREATION_DATE,CREATION_BY,LAST_UPDATE_DATE,LAST_UPDATE_BY
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			#{guser_limit_id,jdbcType=NUMERIC},
+			#{obj_type,jdbcType=VARCHAR},#{obj_value,jdbcType=VARCHAR},'0',
+			sysdate,#{creation_by,jdbcType=NUMERIC},sysdate,#{last_update_by,jdbcType=NUMERIC}
+		</trim>
+	</insert>
+	<!-- 软删除主表记录 -->
+	<update id="deleteBaseGuestLimitById" flushCache="true" parameterType="com.aus.common.model.BaseGuestLimit">
+		UPDATE BASE.BASE_GUSER_LIMIT 
+		SET
+	    IS_DELETE ='1',
+		LAST_UPDATE_BY = #{last_update_by,jdbcType=NUMERIC},
+		LAST_UPDATE_DATE =sysdate
+		WHERE USER_ID = #{user_id,jdbcType=VARCHAR}
+	</update>
+	<!-- 软删除子表记录  -->
+	<update id="deleteBaseGuestLimitObjById" flushCache="true" parameterType="com.aus.common.model.BaseGuestLimit">
+		UPDATE BASE.BASE_GUSER_LIMIT_OBJ 
+		SET
+	    IS_DELETE ='1',
+		LAST_UPDATE_BY = #{last_update_by,jdbcType=NUMERIC},
+		LAST_UPDATE_DATE =sysdate
+		WHERE GUSER_LIMIT_ID = #{guser_limit_id,jdbcType=NUMERIC}
+	</update>
+	<select  id="getBaseGuestLimitByUserId" parameterType="com.aus.common.model.BaseGuestLimit" resultType="com.aus.common.model.BaseGuestLimit">
+	   SELECT * FROM BASE.BASE_GUSER_LIMIT LIMIT WHERE LIMIT.USER_ID = #{user_id,jdbcType=VARCHAR} AND LIMIT.FUN_ID = #{fun_id,jdbcType=VARCHAR} and LIMIT.IS_DELETE='0' 
+	</select>
+		<select  id="getBaseGuestLimitObjByLimitId" parameterType="com.aus.common.model.BaseGuestLimitObj" resultType="com.aus.common.model.BaseGuestLimitObj">
+	   SELECT HR.HR_ORGANIZATION_ID,HR.HR_ORGANIZATION_NAME_ABBREV as hr_organization_name FROM BASE.BASE_GUSER_LIMIT_OBJ LIMIT,AUPORTAL.BASE_ORGANIZATION_HR_V HR WHERE LIMIT.GUSER_LIMIT_ID = #{guser_limit_id,jdbcType=VARCHAR} AND LIMIT.OBJ_TYPE = '1'
+	   AND HR.HR_ORGANIZATION_ID = LIMIT.OBJ_VALUE
+	    and LIMIT.IS_DELETE='0' 
+	</select>
+    <select  id="getBaseGuestLimitJobObjByLimitId" parameterType="com.aus.common.model.BaseGuestLimitObj" resultType="com.aus.common.model.BaseGuestLimitObj">
+	   SELECT LIMIT.OBJ_VALUE FROM BASE.BASE_GUSER_LIMIT_OBJ LIMIT WHERE LIMIT.GUSER_LIMIT_ID = #{guser_limit_id,jdbcType=VARCHAR} AND LIMIT.OBJ_TYPE = '3'
+	    and LIMIT.IS_DELETE='0' 
+	</select>
+	
+	
+	   <select id="getDeparmentList" resultType="com.aus.common.model.BaseGuestLimit" parameterType="java.util.Map">
+     SELECT  hr1.HR_ORGANIZATION_ID,
+          hr1.HR_ORGANIZATION_NAME_ABBREV as HR_ORGANIZATION_NAME,
+          hr1.PARENT_HR_ORGANIZATION_ID FROM AUPORTAL.BASE_ORGANIZATION_HR_V HR1 WHERE 1=1
+          <if test="hrOrganizationName != null and ''!= hrOrganizationName"  >
+          AND hr1.HR_ORGANIZATION_NAME like '%' || #{hrOrganizationName} || '%' 
+          </if>
+          <if test="hrOrganizationId != null and ''!= hrOrganizationId ">
+			   AND   HR1.OU_ORGANIZATION_ID   IN
+			  ( 
+		            SELECT CAB.USER_ID ORG_ID_CHILD  
+		              FROM APPS.CUX_CDM_ACCESS_BASEDATA CAB
+		             WHERE CAB.ACCESS_TYPE = '9'
+		               AND CAB.ORG_ID =#{hrOrganizationId,jdbcType=VARCHAR} 
+		               AND CAB.CUST_ACCOUNT_ID IN (2,3)
+			         )
+			</if>
+   </select>
+	
+	
+</mapper>
